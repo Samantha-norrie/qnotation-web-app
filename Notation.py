@@ -20,8 +20,36 @@ class Notation:
             circuit_json_list.append({"content": content, "type": "GATE","key": i+1})
 
         return circuit_json_list
+    
+    def simplify_values_matrix(matrix):
+        for i in range(0, len(matrix)):
+            for j in range(0, len(matrix[i])):
+                real_val = float(matrix[i][j].real)
+                imag_val = float(matrix[i][j].imag)
 
-   # Create list of state vectors for matrix display
+                if real_val == 0.0 and imag_val == 0.0:
+                    matrix[i][j] = 0.0
+                elif imag_val == 0.0:
+                    
+                    matrix[i][j] = float(round(real_val,2))
+
+        return matrix
+    
+    def simplify_values_state_vector(state_vector):
+        for i in range(0, len(state_vector)):
+            real_val = float(state_vector[i][0].real)
+            imag_val = float(state_vector[i][0].imag)
+
+            if real_val == 0.0 and imag_val == 0.0:
+                state_vector[i][0] = 0.0
+            elif imag_val == 0.0:
+                
+                state_vector[i][0] = float(round(real_val,2))
+
+        return state_vector
+    
+
+    # Create list of state vectors for matrix display
     def create_matrix_state_vector_json(num_qubits, matrices=[]):
 
         matrix_vector_state_json = []
@@ -32,26 +60,11 @@ class Notation:
         for i in range(0, len(matrices)):
             vector = np.dot(matrices[i]["content"], vector)
 
-            matrix_vector_state_json.append({"content": vector.tolist(), "type": "GATE","key": i+1})
+            matrix_vector_state_json.append({"content": Notation.simplify_values_state_vector(vector.tolist()), "type": "GATE","key": i+1})
 
         return matrix_vector_state_json
     
-    def simplify_values(matrix):
-        for i in range(0, len(matrix)):
-            for j in range(0, len(matrix[i])):
-                real_val = float(matrix[i][j].real)
-                imag_val = float(matrix[i][j].imag)
-                print(type(real_val) , real_val)
-                print(type(imag_val) , imag_val)
 
-                if real_val == 0.0 and imag_val == 0.0:
-                    matrix[i][j] = 0.0
-                elif imag_val == 0.0:
-                    
-                    matrix[i][j] = float(round(real_val,2))
-                    print("in here", type(matrix[i][j]))
-
-        return matrix
 
 
     # Create list of matrices of grouped gates which can be used matrix display
@@ -59,18 +72,13 @@ class Notation:
 
         matrix_gate_json_list = []
 
-        # identity_matrix = np.array([[1 if i == j else 0 for j in range(2**num_qubits)] for i in range(2**num_qubits)])
-
-        # matrix_gate_json_list.append({"content": identity_matrix.tolist(), "type": "INIT","key": 0})
-
-
         for i in range(0, len(operation_list)):
 
             matrix = Operator(operation_list[i][0].operation).data
             for j in range(1, len(operation_list[i])):
                 matrix = np.kron(matrix, Operator(operation_list[i][j].operation).data)
 
-            matrix_gate_json_list.append({"content": Notation.simplify_values(matrix.tolist()), "type": "GATE","key": i+1})
+            matrix_gate_json_list.append({"content": Notation.simplify_values_matrix(matrix.tolist()), "type": "GATE","key": i+1})
 
         # Notation.simplify_values(matrix_gate_json_list)
         return matrix_gate_json_list
@@ -92,7 +100,7 @@ class Notation:
             # matrix = Operator(operation_list[i][0].operation).data
             for j in range(0, len(operation_list[i])):
                 # matrix = np.kron(matrix, Operator(operation_list[i][j].operation).data)
-                matrices.append(Notation.simplify_values(Operator(operation_list[i][0].operation).data))
+                matrices.append(Notation.simplify_values_matrix(Operator(operation_list[i][0].operation).data))
 
             matrix_gate_json_list.append({"content": matrices, "type": "GATE","key": i+1})
 
@@ -100,6 +108,7 @@ class Notation:
         return matrix_gate_json_list
 
     def group_gates(circuit):
+        print("in group gates")
         gates = circuit.data
 
         operation_list = []
