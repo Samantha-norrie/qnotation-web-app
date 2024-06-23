@@ -1,11 +1,14 @@
 from qiskit.quantum_info.operators import Operator
 import numpy as np
+import copy
 
 class Notation:
 
     # Create list of grouped gates which can be used for circuit and Dirac display
     def create_circuit_dirac_gates_json(num_qubits, operation_list):
         circuit_json_list = []
+
+        print("operation list in circuit", operation_list)
 
         circuit_json_list.append({"content": [[0] for i in range(0, num_qubits)], "type": "QUBIT","key": 0})
 
@@ -73,6 +76,7 @@ class Notation:
 
         print(index_list)
         return index_list
+    
     # Create list of matrices of grouped gates which can be used matrix display
     def create_matrix_gate_json(num_qubits, operation_list):
         print("in function")
@@ -85,7 +89,7 @@ class Notation:
         # for each column...
         for i in range(0, len(operation_list)):
 
-            gate_column = operation_list[i]
+            gate_column = copy.deepcopy(operation_list[i])
             print("gate column", gate_column)
             matrix = []
 
