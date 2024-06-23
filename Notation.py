@@ -66,30 +66,67 @@ class Notation:
     
 
 
+    def get_list_of_qubit_indices_in_gate(gate):
+        index_list = []
+        for i in range(0, len(gate.qubits)):
+            index_list.append(gate.qubits[i].index)
 
+        print(index_list)
+        return index_list
     # Create list of matrices of grouped gates which can be used matrix display
     def create_matrix_gate_json(num_qubits, operation_list):
+        print("in function")
+
+
+        identity_matrix = np.array([[1, 0], [0, 1]])
 
         matrix_gate_json_list = []
 
+        # for each column...
         for i in range(0, len(operation_list)):
 
-            matrix = Operator(operation_list[i][0].operation).data
-            for j in range(1, len(operation_list[i])):
-                matrix = np.kron(matrix, Operator(operation_list[i][j].operation).data)
+            gate_column = operation_list[i]
+            print("gate column", gate_column)
+            matrix = []
+
+            # Matrix calculations for column
+            for j in range(0, num_qubits):
+
+                print("looping through qubits")
+                # try to find matrix in list of operations
+                found = False
+                k = 0
+                while k < len(gate_column) and not found:
+
+                    # if found, add matrix, remove from list
+                    print("qubits", gate_column[k].qubits)
+                    if j in Notation.get_list_of_qubit_indices_in_gate(gate_column[k]):
+                        print("gate found for qubit")
+                        if matrix == []:
+                            matrix = Operator(gate_column[k].operation).data
+                        else:
+                            matrix = np.kron(matrix, Operator(gate_column[k].operation).data)
+                        del gate_column[k]
+                        found = True
+
+                # if not found, add 2x2 identity matrix
+                if not found:
+                    if matrix == []:
+                        matrix = identity_matrix
+                    else:
+                        matrix = np.kron(matrix, identity_matrix)
+
+                    k =k+1
 
             matrix_gate_json_list.append({"content": Notation.simplify_values_matrix(matrix.tolist()), "type": "GATE","key": i+1})
 
-        # Notation.simplify_values(matrix_gate_json_list)
+        print("matrices", matrix_gate_json_list)
+
         return matrix_gate_json_list
 
-    def create_matrix_gate_json_with_tensor_product(num_qubits, operation_list):  
+    def create_matrix_gate_json_with_tensor_product(num_qubits, operation_list): 
+
         matrix_gate_json_list = []
-
-        # identity_matrix = np.array([[1 if i == j else 0 for j in range(2**num_qubits)] for i in range(2**num_qubits)])
-
-        # matrix_gate_json_list.append({"content": identity_matrix.tolist(), "type": "INIT","key": 0})
-
 
         for i in range(0, len(operation_list)):
 
@@ -97,23 +134,21 @@ class Notation:
             min_qubit = num_qubits
             max_qubit = 0
 
-            # matrix = Operator(operation_list[i][0].operation).data
             for j in range(0, len(operation_list[i])):
-                # matrix = np.kron(matrix, Operator(operation_list[i][j].operation).data)
+
                 matrices.append(Notation.simplify_values_matrix(Operator(operation_list[i][0].operation).data))
 
             matrix_gate_json_list.append({"content": matrices, "type": "GATE","key": i+1})
 
-        # Notation.simplify_values(matrix_gate_json_list)
         return matrix_gate_json_list
 
     def group_gates(circuit):
-        print("in group gates")
         gates = circuit.data
 
         operation_list = []
         operation = []
         qubits_in_operation = []
+
 
         while len(gates) > 0:
             current_gate = gates.pop(0)
