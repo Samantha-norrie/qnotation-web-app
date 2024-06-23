@@ -18,7 +18,7 @@ class Notation:
                 if j < len(operation_list[i]):
                     content.append({"gate": operation_list[i][j].operation.name})
                 else:
-                    content.append({"gate": None})
+                    content.append({"gate": "I"})
 
             circuit_json_list.append({"content": content, "type": "GATE","key": i+1})
 
