@@ -1,27 +1,25 @@
 from flask import Flask, jsonify, request
 from Notation import Notation
 from qiskit import *
-import numpy as py
-import json 
 
 app = Flask(__name__)
 
 @app.post("/get_notation_data")
 def get_notation_data():
     data = request.form.to_dict()
-    print(data)
 
 
     display_tensor_product =  bool(data.get('data[display_tensor_product]'))
     qc = QuantumCircuit(2)
     qc.h(0)
-    # qc.x(1)
+    qc.h(1)
+    qc.x(0)
+    qc.h(1)
     # qc.h(2)
 
     num_qubits = qc.num_qubits
 
     grouped_gates = Notation.group_gates(qc)
-    print("GROUPED GATES", grouped_gates)
 
     matrix_gates = Notation.create_matrix_gate_json(num_qubits, grouped_gates)
     matrix_state_vectors = Notation.create_matrix_state_vector_json(num_qubits, matrix_gates)

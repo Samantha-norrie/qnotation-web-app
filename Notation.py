@@ -8,8 +8,6 @@ class Notation:
     def create_circuit_dirac_gates_json(num_qubits, operation_list):
         circuit_json_list = []
 
-        print("operation list in circuit", operation_list)
-
         circuit_json_list.append({"content": [[0] for i in range(0, num_qubits)], "type": "QUBIT","key": 0})
 
         for i in range(0, len(operation_list)):
@@ -74,13 +72,10 @@ class Notation:
         for i in range(0, len(gate.qubits)):
             index_list.append(gate.qubits[i].index)
 
-        print(index_list)
         return index_list
     
     # Create list of matrices of grouped gates which can be used matrix display
     def create_matrix_gate_json(num_qubits, operation_list):
-        print("in function")
-
 
         identity_matrix = np.array([[1, 0], [0, 1]])
 
@@ -90,22 +85,18 @@ class Notation:
         for i in range(0, len(operation_list)):
 
             gate_column = copy.deepcopy(operation_list[i])
-            print("gate column", gate_column)
             matrix = []
 
             # Matrix calculations for column
             for j in range(0, num_qubits):
 
-                print("looping through qubits")
                 # try to find matrix in list of operations
                 found = False
                 k = 0
                 while k < len(gate_column) and not found:
 
                     # if found, add matrix, remove from list
-                    print("qubits", gate_column[k].qubits)
                     if j in Notation.get_list_of_qubit_indices_in_gate(gate_column[k]):
-                        print("gate found for qubit")
                         if matrix == []:
                             matrix = Operator(gate_column[k].operation).data
                         else:
@@ -123,8 +114,6 @@ class Notation:
                     k =k+1
 
             matrix_gate_json_list.append({"content": Notation.simplify_values_matrix(matrix.tolist()), "type": "GATE","key": i+1})
-
-        print("matrices", matrix_gate_json_list)
 
         return matrix_gate_json_list
 
