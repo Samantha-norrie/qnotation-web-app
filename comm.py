@@ -11,10 +11,11 @@ def get_notation_data():
 
     display_tensor_product =  bool(data.get('data[display_tensor_product]'))
     qc = QuantumCircuit(2)
+    qc.x(0)
+    qc.x(1)
     qc.h(0)
     qc.h(1)
-    qc.x(0)
-    qc.h(1)
+
     # qc.h(2)
 
     num_qubits = qc.num_qubits
@@ -24,8 +25,12 @@ def get_notation_data():
     matrix_gates = Notation.create_matrix_gate_json(num_qubits, grouped_gates)
     matrix_state_vectors = Notation.create_matrix_state_vector_json(num_qubits, matrix_gates)
 
-    if display_tensor_product:
-        matrix_gates
+    dirac_state_vectors = Notation.format_matrix_state_vectors_for_dirac_state(matrix_state_vectors)
+
+    print("dirac states", dirac_state_vectors)
+
+    # if display_tensor_product:
+    #     matrix_gates
 
     matrix_gates.insert(0, matrix_state_vectors[0])
 
@@ -34,7 +39,7 @@ def get_notation_data():
     return jsonify({'matrix_gates': matrix_gates,
                     'matrix_state_vectors': matrix_state_vectors,
                     'circuit_dirac_gates': circuit_dirac_gates,
-                    'dirac_state': "",
+                    'dirac_state_vectors': dirac_state_vectors,
         'success': 'ok'})
 
 if __name__ == "__main__":

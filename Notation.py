@@ -117,6 +117,21 @@ class Notation:
 
         return matrix_gate_json_list
 
+    def format_matrix_state_vectors_for_dirac_state(state_vector):
+        # print("state vector list", state_vector)
+        dirac_state_json = []
+
+        for i in range(0, len(state_vector)):
+            values = []
+            print("instance", state_vector[i])
+            for j in range(0, len(state_vector[i]["content"])):
+                # if the state exists, convert it into binary
+                if state_vector[i]["content"][j][0] != 0:
+                    values.append({"bin": format(j, 'b'), "scalar": state_vector[i]["content"][j][0]})
+            dirac_state_json.append({"content": values, "type": "STATE", "key": i})
+
+        return dirac_state_json
+
     def create_matrix_gate_json_with_tensor_product(num_qubits, operation_list): 
 
         matrix_gate_json_list = []
@@ -134,6 +149,7 @@ class Notation:
             matrix_gate_json_list.append({"content": matrices, "type": "GATE","key": i+1})
 
         return matrix_gate_json_list
+    
 
     def group_gates(circuit):
         gates = circuit.data
