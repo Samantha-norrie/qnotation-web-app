@@ -1,8 +1,69 @@
+from qiskit import *
 from qiskit.quantum_info.operators import Operator
+from qiskit.circuit import CircuitInstruction, Instruction, Qubit
 import numpy as np
 import copy
 
+import subprocess
+import sys
+import os
+import tempfile
+import ast
+
 class Notation:
+
+    #  Process circuit received from frontend
+    def process_circuit_received(qc_string):
+        qc_code_list = qc_string.split('\n')
+        print(qc_string)
+
+        qc_string_formatted = ""
+
+        end_of_imports_found = False
+        for i in range(0, len(qc_code_list)):
+            if not end_of_imports_found and "import numpy as np" in qc_code_list[i]:
+                qc_string_formatted = qc_string_formatted + qc_code_list[i] + "\ndef main():\n"
+                end_of_imports_found = True
+            elif end_of_imports_found:
+                qc_string_formatted = qc_string_formatted + "   " + qc_code_list[i]  + "\n"
+            else:
+                qc_string_formatted = qc_string_formatted + qc_code_list[i] + "\n"
+        qc_string_formatted = qc_string_formatted + "   " + "print([qc.num_qubits, qc.data])" + "\nmain()"
+
+        circuit_details = []
+
+        # Use a temporary file to execute the code securely
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.py') as temp_file:
+            temp_file.write(qc_string_formatted.encode('utf-8'))
+            temp_file_name = temp_file.name
+        try:
+            # Execute the code in the temporary file using a subprocess
+            result = subprocess.run([sys.executable, temp_file_name], capture_output=True, text=True, timeout=5)
+
+            output = result.stdout
+            print("OUTPUT",output)
+            print("length", len(output))
+            print("after printing out length")
+            circuit_details = eval(output)
+            # print("CIRCUIT length", len(circuit_details))
+            print("gates", circuit_details)
+            # print("gate len" + len(gates))
+            error = result.stderr
+        except subprocess.TimeoutExpired:
+            output = ""
+            error = "Execution timed out"
+            print("ERROR", error)
+        except Exception as e:
+            output = ""
+            error = str(e)
+            print("ERROR1", error)
+        finally:
+            # Ensure the temporary file is deleted after execution
+            os.remove(temp_file_name)
+
+        print("IS CIRCUITINSTRUCTION", type(circuit_details[1][0])== CircuitInstruction)
+        print("IS CIRCUITINSTRUCTION", type(circuit_details[1][0].operation)== Instruction)
+        return circuit_details
 
     # Create list of grouped gates which can be used for circuit and Dirac display
     def create_circuit_dirac_gates_json(num_qubits, operation_list):
@@ -98,7 +159,11 @@ class Notation:
                     # if found, add matrix, remove from list
                     if j in Notation.get_list_of_qubit_indices_in_gate(gate_column[k]):
                         if matrix == []:
-                            matrix = Operator(gate_column[k].operation).data
+                            print("in problematic part",gate_column[k].operation)
+                            # matrix = Operator(gate_column[k].operation).data
+                            temp_qc = QuantumCircuit(num_qubits)
+                            temp_qc.data.insert(0, gate_column[k])
+                            matrix = Operator(temp_qc)
                         else:
                             matrix = np.kron(matrix, Operator(gate_column[k].operation).data)
                         del gate_column[k]

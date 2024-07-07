@@ -1,6 +1,8 @@
 from flask import Flask, jsonify, request
 from Notation import Notation
 from qiskit import *
+from qiskit.circuit import CircuitInstruction, Instruction, Qubit
+from qiskit.circuit.quantumcircuitdata import QuantumCircuitData
 
 app = Flask(__name__)
 
@@ -10,13 +12,41 @@ def get_notation_data():
 
 
     display_tensor_product =  bool(data.get('data[display_tensor_product]'))
-    qc = QuantumCircuit(2)
-    qc.x(0)
-    qc.x(1)
-    qc.h(0)
-    qc.h(1)
+    qc_string = data.get('data[qc]')
+    circuit_details = Notation.process_circuit_received(qc_string)
+
+    qc = QuantumCircuit(circuit_details[0])
+    gate_list = QuantumCircuitData(qc)
+    print("INIT type", type(gate_list))
+    # gate_list.__setitem__(0, circuit_details[1][0])
+    # for i in range(0, len(circuit_details[1])):
+    #     qc.h(0)
+
+    for i in range(0, len(circuit_details[1])):
+        qc.data.insert(i, circuit_details[1][i])
+    # gate_list.append(circuit_details[1][0])
+
+    # qc.data = gate_list#QuantumCircuitData(circuit_details[1])
+    # print(" type AFTER", type(gate_list))
+    print("DATA", qc.data)
+    print(qc)
+
+
+    # qc.x(0)
+    # qc.x(1)
+    # qc.h(0)
+    # qc.h(1)
 
     # qc.h(2)
+    # print("DATA", type(qc.data[0]))
+
+    # print("PROPOSED", type(circuit_details[1]))
+    # print("COMPARISON", (qc.data[0] == circuit_details[1][0]))
+    # qc.data = circuit_details[1]
+    # for i in range(0, len(circuit_details[1])):
+    #     qc.data.append(circuit_details[1][i])
+
+
 
     num_qubits = qc.num_qubits
 
