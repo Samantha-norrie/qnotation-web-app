@@ -8,7 +8,6 @@ import subprocess
 import sys
 import os
 import tempfile
-import ast
 
 class Notation:
 
@@ -41,13 +40,8 @@ class Notation:
             result = subprocess.run([sys.executable, temp_file_name], capture_output=True, text=True, timeout=5)
 
             output = result.stdout
-            print("OUTPUT",output)
-            print("length", len(output))
-            print("after printing out length")
+
             circuit_details = eval(output)
-            # print("CIRCUIT length", len(circuit_details))
-            print("gates", circuit_details)
-            # print("gate len" + len(gates))
             error = result.stderr
         except subprocess.TimeoutExpired:
             output = ""
@@ -61,9 +55,27 @@ class Notation:
             # Ensure the temporary file is deleted after execution
             os.remove(temp_file_name)
 
-        print("IS CIRCUITINSTRUCTION", type(circuit_details[1][0])== CircuitInstruction)
-        print("IS CIRCUITINSTRUCTION", type(circuit_details[1][0].operation)== Instruction)
         return circuit_details
+    
+    def convert_input_gates(num_qubits, gates):
+        print(gates)
+        qc = QuantumCircuit(num_qubits)
+        for i in range(0, len(gates)):
+            match gates[i].operation.name:
+                case "cx":
+                    qc.cx(gates[i].qubits[0].index, gates[i].qubits[1].index)
+                case "h":
+                    qc.h(gates[i].qubits[0].index)
+                case "p":
+                    qc.p(gates[i].operation.params[0], gates[i].qubits[0].index)
+                case "x":
+                    qc.x(gates[i].qubits[0].index)
+                case "y":
+                    qc.y(gates[i].qubits[0].index)
+                case "z":
+                    qc.z(gates[i].qubits[0].index)
+                
+        return qc
 
     # Create list of grouped gates which can be used for circuit and Dirac display
     def create_circuit_dirac_gates_json(num_qubits, operation_list):
@@ -88,12 +100,14 @@ class Notation:
             for j in range(0, len(matrix[i])):
                 real_val = float(matrix[i][j].real)
                 imag_val = float(matrix[i][j].imag)
+                print("real val", real_val, "imag val", imag_val)
 
                 if real_val == 0.0 and imag_val == 0.0:
                     matrix[i][j] = 0.0
-                elif imag_val == 0.0:
-                    
+                elif round(imag_val,4) == 0.0:     
                     matrix[i][j] = float(round(real_val,2))
+                # elif round(real_val,4) != 0.0 and round(imag_val,4) != 0.0: 
+                #     matrix[i][j] = str(round(real_val,2)) + str(round(imag_val,2)) + "i"
 
         return matrix
     
@@ -160,10 +174,10 @@ class Notation:
                     if j in Notation.get_list_of_qubit_indices_in_gate(gate_column[k]):
                         if matrix == []:
                             print("in problematic part",gate_column[k].operation)
-                            # matrix = Operator(gate_column[k].operation).data
-                            temp_qc = QuantumCircuit(num_qubits)
-                            temp_qc.data.insert(0, gate_column[k])
-                            matrix = Operator(temp_qc)
+                            matrix = Operator(gate_column[k].operation).data
+                            # temp_qc = QuantumCircuit(num_qubits)
+                            # temp_qc.data.insert(0, gate_column[k])
+                            # matrix = Operator(temp_qc)
                         else:
                             matrix = np.kron(matrix, Operator(gate_column[k].operation).data)
                         del gate_column[k]
