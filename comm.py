@@ -20,7 +20,10 @@ def get_notation_data():
     grouped_gates = Notation.group_gates(qc)
 
     matrix_gates = Notation.create_matrix_gate_json(num_qubits, grouped_gates)
+    print("MATRICES", matrix_gates)
     matrix_state_vectors = Notation.create_matrix_state_vector_json(num_qubits, matrix_gates)
+
+    matrix_gates = Notation.simplify_values_matrix(matrix_gates)
 
     dirac_state_vectors = Notation.format_matrix_state_vectors_for_dirac_state(matrix_state_vectors)
 

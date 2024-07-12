@@ -95,21 +95,23 @@ class Notation:
 
         return circuit_json_list
     
-    def simplify_values_matrix(matrix):
-        for i in range(0, len(matrix)):
-            for j in range(0, len(matrix[i])):
-                real_val = float(matrix[i][j].real)
-                imag_val = float(matrix[i][j].imag)
-                print("real val", real_val, "imag val", imag_val)
+    def simplify_values_matrix(matrices):
+        for i in range(0, len(matrices)):
+            matrix = matrices[i]["content"]
+            for j in range(0, len(matrix)):
+                for k in range(0, len(matrix[j])):
+                    real_val = float(matrix[j][k].real)
+                    imag_val = float(matrix[j][k].imag)
+                    print("real val", real_val, "imag val", imag_val)
 
-                if real_val == 0.0 and imag_val == 0.0:
-                    matrix[i][j] = 0.0
-                elif round(imag_val,4) == 0.0:     
-                    matrix[i][j] = float(round(real_val,2))
-                # elif round(real_val,4) != 0.0 and round(imag_val,4) != 0.0: 
-                #     matrix[i][j] = str(round(real_val,2)) + str(round(imag_val,2)) + "i"
+                    if real_val == 0.0 and imag_val == 0.0:
+                        matrix[j][k] = 0.0
+                    elif round(imag_val,4) == 0.0:     
+                        matrix[j][k] = float(round(real_val,2))
+                    # elif round(real_val,4) != 0.0 and round(imag_val,4) != 0.0: 
+                    #     matrix[i][j] = str(round(real_val,2)) + str(round(imag_val,2)) + "i"
 
-        return matrix
+        return matrices
     
     def simplify_values_state_vector(state_vector):
         for i in range(0, len(state_vector)):
@@ -162,6 +164,7 @@ class Notation:
             gate_column = copy.deepcopy(operation_list[i])
             matrix = []
 
+            accounted_for_qubits = []
             # Matrix calculations for column
             for j in range(0, num_qubits):
 
@@ -171,28 +174,30 @@ class Notation:
                 while k < len(gate_column) and not found:
 
                     # if found, add matrix, remove from list
-                    if j in Notation.get_list_of_qubit_indices_in_gate(gate_column[k]):
+                    if k in Notation.get_list_of_qubit_indices_in_gate(gate_column[k]) and k not in accounted_for_qubits:
+                        for l in range(0, len(gate_column[k].qubits)):
+                            if not gate_column[k].qubits[l].index in accounted_for_qubits:
+                                accounted_for_qubits.append(gate_column[k].qubits[l].index)
+
+                        print("ACCOUNTED FOR QUBITS", accounted_for_qubits)
                         if matrix == []:
                             print("in problematic part",gate_column[k].operation)
                             matrix = Operator(gate_column[k].operation).data
-                            # temp_qc = QuantumCircuit(num_qubits)
-                            # temp_qc.data.insert(0, gate_column[k])
-                            # matrix = Operator(temp_qc)
                         else:
                             matrix = np.kron(matrix, Operator(gate_column[k].operation).data)
                         del gate_column[k]
                         found = True
 
                 # if not found, add 2x2 identity matrix
-                if not found:
+                if not found and j not in accounted_for_qubits:
                     if matrix == []:
                         matrix = identity_matrix
                     else:
                         matrix = np.kron(matrix, identity_matrix)
 
-                    k =k+1
+                    k = k+1
 
-            matrix_gate_json_list.append({"content": Notation.simplify_values_matrix(matrix.tolist()), "type": "GATE","key": i+1})
+            matrix_gate_json_list.append({"content": matrix.tolist(), "type": "GATE","key": i+1})
 
         return matrix_gate_json_list
 
