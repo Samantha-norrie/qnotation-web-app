@@ -85,11 +85,21 @@ class Notation:
 
         for i in range(0, len(operation_list)):
             content = []
+            multi_qubits = []
             for j in range(0, num_qubits):
                 if j < len(operation_list[i]):
                     content.append({"gate": operation_list[i][j].operation.name})
+                    if len(operation_list[i][j].qubits) > 1:
+                        for k in range(0, len(operation_list[i][j].qubits)):
+                            multi_qubits.append({"qubit": operation_list[i][j].qubits[k].index, "gate": operation_list[i][j].operation.name})
                 else:
-                    content.append({"gate": "I"})
+                    found = False
+                    for k in range(0, len(multi_qubits)):
+                        if not found and j == multi_qubits[k]["qubit"]:
+                            content.append({"gate": multi_qubits[k]["gate"]})
+                            found = True
+                    if not found:
+                        content.append({"gate": "I"})
 
             circuit_json_list.append({"content": content, "type": "GATE","key": i+1})
 
