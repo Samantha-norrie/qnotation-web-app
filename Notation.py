@@ -63,12 +63,34 @@ class Notation:
         qc = QuantumCircuit(num_qubits)
         for i in range(0, len(gates)):
             match gates[i].operation.name:
+                case "cs":
+                    qc.cs(gates[i].qubits[0].index, gates[i].qubits[1].index)
+                case "cswap":
+                    qc.cswap(gates[i].qubits[0].index, gates[i].qubits[1].index, gates[i].qubits[2].index)
+                case "csx":
+                    qc.csx(gates[i].qubits[0].index, gates[i].qubits[1].index)
                 case "cx":
                     qc.cx(gates[i].qubits[0].index, gates[i].qubits[1].index)
+                case "cy":
+                    qc.cy(gates[i].qubits[0].index, gates[i].qubits[1].index)
+                case "cz":
+                    qc.cz(gates[i].qubits[0].index, gates[i].qubits[1].index)
+                case "dcx":
+                    qc.dcx(gates[i].qubits[0].index, gates[i].qubits[1].index)
                 case "h":
                     qc.h(gates[i].qubits[0].index)
+                case "i":
+                    qc.i(gates[i].qubits[0].index)
+                case "iswap":
+                    qc.iswap(gates[i].qubits[0].index, gates[i].qubits[1].index)
                 case "p":
                     qc.p(gates[i].operation.params[0], gates[i].qubits[0].index)
+                case "r":
+                    qc.r(gates[i].operation.params[0], gates[i].operation.params[1], gates[i].qubits[0].index)
+                case "rcccx":
+                    qc.rcccx(gates[i].qubits[0].index, gates[i].qubits[1].index, gates[i].qubits[2].index, gates[i].qubits[3].index)
+                case "rccx":
+                    qc.rccx(gates[i].qubits[0].index, gates[i].qubits[1].index, gates[i].qubits[2].index)
                 case "x":
                     qc.x(gates[i].qubits[0].index)
                 case "y":
