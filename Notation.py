@@ -1,6 +1,7 @@
 from qiskit import *
 from qiskit.quantum_info.operators import Operator
 from qiskit.circuit import CircuitInstruction, Instruction, Qubit
+from Errors import InvalidGate
 import numpy as np
 import copy
 
@@ -74,6 +75,8 @@ class Notation:
                     qc.y(gates[i].qubits[0].index)
                 case "z":
                     qc.z(gates[i].qubits[0].index)
+                case _:
+                    raise InvalidGate
                 
         return qc
 
