@@ -10,8 +10,9 @@ app = Flask(__name__)
 def get_notation_data():
     data = request.form.to_dict()
 
+    #TODO AAAAAAAA
+    display_tensor_product =  True if data.get('data[display_tensor_product]').lower() == "true" else False
 
-    display_tensor_product =  bool(data.get('data[display_tensor_product]'))
     qc_string = data.get('data[qc]')
     matrix_gates = None
     matrix_state_vectors = None
