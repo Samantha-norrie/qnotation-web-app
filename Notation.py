@@ -79,24 +79,22 @@ class Notation:
                     qc.dcx(gates[i].qubits[0].index, gates[i].qubits[1].index)
                 case "h":
                     qc.h(gates[i].qubits[0].index)
-                case "i":
-                    qc.i(gates[i].qubits[0].index)
                 case "iswap":
                     qc.iswap(gates[i].qubits[0].index, gates[i].qubits[1].index)
-                case "p":
-                    qc.p(gates[i].operation.params[0], gates[i].qubits[0].index)
-                case "r":
-                    qc.r(gates[i].operation.params[0], gates[i].operation.params[1], gates[i].qubits[0].index)
-                case "rcccx":
-                    qc.rcccx(gates[i].qubits[0].index, gates[i].qubits[1].index, gates[i].qubits[2].index, gates[i].qubits[3].index)
-                case "rccx":
-                    qc.rccx(gates[i].qubits[0].index, gates[i].qubits[1].index, gates[i].qubits[2].index)
-                case "x":
-                    qc.x(gates[i].qubits[0].index)
-                case "y":
-                    qc.y(gates[i].qubits[0].index)
-                case "z":
-                    qc.z(gates[i].qubits[0].index)
+                # case "p":
+                #     qc.p(gates[i].operation.params[0], gates[i].qubits[0].index)
+                # case "r":
+                #     qc.r(gates[i].operation.params[0], gates[i].operation.params[1], gates[i].qubits[0].index)
+                # case "rcccx":
+                #     qc.rcccx(gates[i].qubits[0].index, gates[i].qubits[1].index, gates[i].qubits[2].index, gates[i].qubits[3].index)
+                # case "rccx":
+                #     qc.rccx(gates[i].qubits[0].index, gates[i].qubits[1].index, gates[i].qubits[2].index)
+                # case "x":
+                #     qc.x(gates[i].qubits[0].index)
+                # case "y":
+                #     qc.y(gates[i].qubits[0].index)
+                # case "z":
+                #     qc.z(gates[i].qubits[0].index)
                 case _:
                     raise InvalidGate
                 
