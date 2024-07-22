@@ -81,20 +81,20 @@ class Notation:
                     qc.h(gates[i].qubits[0].index)
                 case "iswap":
                     qc.iswap(gates[i].qubits[0].index, gates[i].qubits[1].index)
-                # case "p":
-                #     qc.p(gates[i].operation.params[0], gates[i].qubits[0].index)
+                case "p":
+                    qc.p(gates[i].operation.params[0], gates[i].qubits[0].index)
                 # case "r":
                 #     qc.r(gates[i].operation.params[0], gates[i].operation.params[1], gates[i].qubits[0].index)
                 # case "rcccx":
                 #     qc.rcccx(gates[i].qubits[0].index, gates[i].qubits[1].index, gates[i].qubits[2].index, gates[i].qubits[3].index)
                 # case "rccx":
                 #     qc.rccx(gates[i].qubits[0].index, gates[i].qubits[1].index, gates[i].qubits[2].index)
-                # case "x":
-                #     qc.x(gates[i].qubits[0].index)
-                # case "y":
-                #     qc.y(gates[i].qubits[0].index)
-                # case "z":
-                #     qc.z(gates[i].qubits[0].index)
+                case "x":
+                    qc.x(gates[i].qubits[0].index)
+                case "y":
+                    qc.y(gates[i].qubits[0].index)
+                case "z":
+                    qc.z(gates[i].qubits[0].index)
                 case _:
                     raise InvalidGate
                 
@@ -141,38 +141,50 @@ class Notation:
                         matrix[j][k] = 0.0
                     elif round(imag_val,4) == 0.0:     
                         matrix[j][k] = float(round(real_val,2))
+                    elif round(imag_val,4) == 1.0:
+                        matrix[j][k] = "i"
+                    else:
                     # elif round(real_val,4) != 0.0 and round(imag_val,4) != 0.0: 
-                    #     matrix[i][j] = str(round(real_val,2)) + str(round(imag_val,2)) + "i"
+                        matrix[i][j] = str(round(real_val,2)) + str(round(imag_val,2)) + "i"
 
         return matrices
     
     def simplify_values_state_vector(state_vector):
+        print("state vector before simplification", state_vector)
         for i in range(0, len(state_vector)):
             real_val = float(state_vector[i][0].real)
             imag_val = float(state_vector[i][0].imag)
 
             if real_val == 0.0 and imag_val == 0.0:
                 state_vector[i][0] = 0.0
-            elif imag_val == 0.0:
+            elif round(imag_val, 4) == 0.0:
                 
                 state_vector[i][0] = float(round(real_val,2))
+            elif round(imag_val,4) == 1.0:
+                state_vector[i][0] = "i"
+            else:
+                state_vector[i][0] = str(round(real_val,2)) + str(round(imag_val,2)) + "i"
 
         return state_vector
     
 
     # Create list of state vectors for matrix display
     def create_matrix_state_vector_json(num_qubits, matrices=[]):
-
+        print("in create_matrix_state_vector_json")
         matrix_vector_state_json = []
-
         vector = np.array([[1 if i == 0 else 0] for i in range(0, 2**num_qubits)])
+        # vector = np.array([[np.complex128(1+0j) if i == 0 else np.complex128(0+0j)] for i in range(0, 2**num_qubits)])
         matrix_vector_state_json.append({"content": vector.tolist(), "type": "STATE","key": 0})
-
+        print("first vector added")
         for i in range(0, len(matrices)):
+            print("types", type(vector), type(matrices[i]["content"]))
+            print("VECTOR", vector)
+            print("CONTENT", matrices[i]["content"])
             vector = np.dot(matrices[i]["content"], vector)
+            print("afer dot")
 
             matrix_vector_state_json.append({"content": Notation.simplify_values_state_vector(vector.tolist()), "type": "GATE","key": i+1})
-
+        print("at return")
         return matrix_vector_state_json
     
 
@@ -223,15 +235,18 @@ class Notation:
 
                 # if not found, add 2x2 identity matrix
                 if not found and j not in accounted_for_qubits:
+                    print("in identity add")
                     if matrix == []:
                         matrix = identity_matrix
                     else:
                         matrix = np.kron(matrix, identity_matrix)
 
-                    k = k+1
+                    # k = k+1
+            
+
 
             matrix_gate_json_list.append({"content": matrix.tolist(), "type": "GATE","key": i+1})
-
+        print("returning")
         return matrix_gate_json_list
 
     def format_matrix_state_vectors_for_dirac_state(state_vector):
@@ -269,6 +284,7 @@ class Notation:
     
 
     def group_gates(circuit):
+        print("in_grouped gates")
         gates = circuit.data
 
         operation_list = []

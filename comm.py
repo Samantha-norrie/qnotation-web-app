@@ -39,9 +39,10 @@ def get_notation_data():
         matrix_state_vectors = Notation.create_matrix_state_vector_json(num_qubits, matrix_gates)
 
         matrix_gates = Notation.simplify_values_matrix(matrix_gates)
+        print("MATRICES SIMPLIFIED", matrix_gates)
 
         dirac_state_vectors = Notation.format_matrix_state_vectors_for_dirac_state(matrix_state_vectors)
-
+        # matrix_state_vectors = Notation.simplify_values_state_vector(matrix_state_vectors)
         matrix_gates.insert(0, matrix_state_vectors[0])
 
         circuit_dirac_gates= Notation.create_circuit_dirac_gates_json(num_qubits, grouped_gates)
@@ -54,9 +55,14 @@ def get_notation_data():
     except InvalidGate:
         message = MESSAGE_INVALID_GATE
         status = 500
-    except:
-        message = MESSAGE_UNKNOWN_ERROR
-        status = 500
+    # except Exception as e:
+    #     print("ERROR ", e)
+    #     message = MESSAGE_UNKNOWN_ERROR
+    #     status = 500
+
+    print("\n\n\n\n\nFINAL MATRIX STATE VECTORS", matrix_state_vectors)
+    print("FINAL MATRIX EQN", matrix_gates)
+
 
     return jsonify({'matrix_gates': matrix_gates,
                     'matrix_state_vectors': matrix_state_vectors,
