@@ -290,82 +290,33 @@ class Notation:
         print("in_grouped gates")
         gates = circuit.data
 
+        columns = [[None for i in range(0, num_qubits)] for j in range(0, 3)]
+        print(columns)
+
+        column_pointer = 0
+
+        while len(gates) > 0:
+            gate = gates.pop(0)
+            gate_indices = Notation.get_list_of_qubit_indices_in_gate(gate)
+            available = True
+            for i in range(0, len(gate_indices)):
+                if columns[column_pointer][gate_indices[i]] != None:
+                    available = False
+            if not available:
+                column_pointer = column_pointer + 1
+                if column_pointer >= len(columns):
+                    columns.append([None for j in range(0, num_qubits)])
+            for i in range(0, len(gate_indices)):
+                if i == 0:
+                    columns[column_pointer][gate_indices[i]] = gate
+                else:
+                    columns[column_pointer][gate_indices[i]] = "MARKED"
+
         operation_list = []
-        operation = []
-        qubits_in_operation = []
 
-        current_qubit = 0
-
-
-
-        current_gate = gates.pop(0)
-        while current_gate != None:
-            # current_gate = gates.pop(0)
-
-            # for i in range(0, num_qubits):
-
-
-
-
-            print("CURRENT GATE", current_gate)
-
-            for k in range(0, num_qubits):#len(current_gate.qubits)):
-                qubit_overlap = False
-                covered_by_gate = False
-                print("IN LOOP FOR", k)
-
-                #check if current qubit is already accounted for in column
-
-                if k in qubits_in_operation:
-                    print("overlap from if")
-                    continue
-
-                #     qubit_overlap = True
-                if current_gate != None:
-                    for l in range(0, len(current_gate.qubits)):
-                        if current_gate.qubits[l].index in qubits_in_operation:
-                            qubit_overlap = True
-                            print("overlap from else")
-                            break
-
-                # if not covered_by_gate:
-                    #check if gate applies to qubits
-                if not qubit_overlap:
-                    print("no qubit overlap")
-                    found = False
-                    if current_gate != None:
-                        # found = False
-                        for l in range(0, len(current_gate.qubits)):
-                            if current_gate.qubits[l].index == k:
-                                print("found")
-                                operation.append(current_gate)
-                                for m in range(0, len(current_gate.qubits)):
-
-                                    qubits_in_operation.append(current_gate.qubits[m].index)
-                                found = True
-                                if len(gates) > 0:
-
-                                    current_gate = gates.pop(0)
-                                else:
-                                    current_gate = None
-                                break
-                    if not found:
-                        print("not found")
-                        qubits_in_operation.append(k)
-                        operation.append(None)
-
-                    # If qubits overlap happened, append and 
-                    if qubit_overlap and not covered_by_gate:
-                        print("QUBIT OVERLAP")
-                        operation_list.append(operation)
-                        operation = []
-                        qubits_in_operation = []
-
-        if len(operation) > 0:
-            operation_list.append(operation)
 
         
-        print("print operation list", operation_list)
+        print("print operation list", columns)
 
         return operation_list
 
