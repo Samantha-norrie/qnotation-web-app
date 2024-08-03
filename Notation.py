@@ -57,6 +57,7 @@ class Notation:
 
         return circuit_details
     
+    #TODO fix eventually
     def convert_input_gates(num_qubits, gates):
 
         qc = QuantumCircuit(num_qubits)
@@ -82,12 +83,44 @@ class Notation:
                     qc.iswap(gates[i].qubits[0].index, gates[i].qubits[1].index)
                 case "p":
                     qc.p(gates[i].operation.params[0], gates[i].qubits[0].index)
-                # case "r":
-                #     qc.r(gates[i].operation.params[0], gates[i].operation.params[1], gates[i].qubits[0].index)
-                # case "rcccx":
-                #     qc.rcccx(gates[i].qubits[0].index, gates[i].qubits[1].index, gates[i].qubits[2].index, gates[i].qubits[3].index)
-                # case "rccx":
-                #     qc.rccx(gates[i].qubits[0].index, gates[i].qubits[1].index, gates[i].qubits[2].index)
+                case "r":
+                    qc.r(gates[i].operation.params[0], gates[i].operation.params[1], gates[i].qubits[0].index)
+                case "rcccx":
+                    qc.rcccx(gates[i].qubits[0].index, gates[i].qubits[1].index, gates[i].qubits[2].index, gates[i].qubits[3].index)
+                case "rccx":
+                    qc.rccx(gates[i].qubits[0].index, gates[i].qubits[1].index, gates[i].qubits[2].index)
+                case "rv":
+                    qc.rv(gates[i].operation.params[0], gates[i].operation.params[1], gates[i].operation.params[0], gates[i].qubits[0].index)
+                case "rx":
+                    qc.rx(gates[i].operation.params[0], gates[i].qubits[0].index)
+                case "rxx":
+                    qc.rxx(gates[i].operation.params[0], gates[i].qubits[0].index, gates[i].qubits[1].index)  
+                case "ry":
+                    qc.ry(gates[i].operation.params[0], gates[i].qubits[0].index)   
+                case "ryy":
+                    qc.ryy(gates[i].operation.params[0], gates[i].qubits[0].index, gates[i].qubits[1].index)
+                case "rz":
+                    qc.rz(gates[i].operation.params[0], gates[i].qubits[0].index)
+                case "rzx":
+                    qc.rzx(gates[i].operation.params[0], gates[i].qubits[0].index, gates[i].qubits[1].index)
+                case "rzz":
+                    qc.rzz(gates[i].operation.params[0], gates[i].qubits[0].index, gates[i].qubits[1].index) 
+                case "s":
+                    qc.s(gates[i].qubits[0].index)
+                case "sdg":
+                    qc.sdg(gates[i].qubits[0].index)
+                case "swap":
+                    qc.swap(gates[i].qubits[0].index, gates[i].qubits[1].index)
+                case "sx":
+                    qc.sx(gates[i].qubits[0].index)     
+                case "sxdg":
+                    qc.sxdg(gates[i].qubits[0].index)
+                case "t":
+                    qc.t(gates[i].qubits[0].index) 
+                case "tdg":
+                    qc.tdg(gates[i].qubits[0].index)
+                case "u":
+                    qc.u(gates[i].operation.params[0], gates[i].operation.params[1], gates[i].operation.params[2], gates[i].qubits[0].index)                     
                 case "x":
                     qc.x(gates[i].qubits[0].index)
                 case "y":
@@ -110,7 +143,7 @@ class Notation:
             content = []
             for j in range(0, num_qubits):
                 if type(grouped_gates[i][j]) == CircuitInstruction:
-                    content.append({"gate": grouped_gates[i][j].operation.name, "continuation": False })
+                    content.append({"gate": grouped_gates[i][j].operation.name.upper(), "continuation": False })
                 elif grouped_gates[i][j] == "MARKED":
                     content.append({"gate": "", "continuation": True})
                 else: 
@@ -121,24 +154,28 @@ class Notation:
             circuit_json_list.append({"content": content, "type": "GATE","key": i+1})
 
         return circuit_json_list
-    
+
+    def simplify_single_matrix(matrix):
+
+        for j in range(0, len(matrix)):
+            for k in range(0, len(matrix[j])):
+
+                real_val = float(matrix[j][k].real)
+                imag_val = float(matrix[j][k].imag)
+
+                if real_val == 0.0 and imag_val == 0.0:
+                    matrix[j][k] = 0.0
+                elif round(imag_val,4) == 0.0:     
+                    matrix[j][k] = float(round(real_val,2))
+                elif round(imag_val,4) == 1.0:
+                    matrix[j][k] = "i"
+                else:
+                    matrix[j][k] = str(round(real_val,2)) + str(round(imag_val,2)) + "i"
+        return matrix
+       
     def simplify_values_matrix(matrices):
         for i in range(0, len(matrices)):
-            matrix = matrices[i]["content"]
-            for j in range(0, len(matrix)):
-                for k in range(0, len(matrix[j])):
-                    real_val = float(matrix[j][k].real)
-                    imag_val = float(matrix[j][k].imag)
-
-                    if real_val == 0.0 and imag_val == 0.0:
-                        matrix[j][k] = 0.0
-                    elif round(imag_val,4) == 0.0:     
-                        matrix[j][k] = float(round(real_val,2))
-                    elif round(imag_val,4) == 1.0:
-                        matrix[j][k] = "i"
-                    else:
-                        matrix[i][j] = str(round(real_val,2)) + str(round(imag_val,2)) + "i"
-
+            matrices[i]["content"] = Notation.simplify_single_matrix(matrices[i]["content"])
         return matrices
     
     def simplify_values_state_vector(state_vector):
@@ -175,15 +212,36 @@ class Notation:
 
         return matrix_vector_state_json
     
-
-
     def get_list_of_qubit_indices_in_gate(gate):
         index_list = []
         for i in range(0, len(gate.qubits)):
             index_list.append(gate.qubits[i].index)
 
         return index_list
-    
+ 
+    def create_tensor_product_matrix_gate_json(num_qubits, grouped_gates):
+        identity_matrix = np.array([[1, 0], [0, 1]])
+
+        matrix_gate_json_list = []
+
+        # for each column...
+        for i in range(0, len(grouped_gates)):
+
+            matrices = []
+            # Matrix calculations for column
+            for j in range(0, num_qubits):
+                if grouped_gates[i][j] == "MARKED":
+                    continue
+                elif grouped_gates[i][j] == None:
+                    matrices.append(identity_matrix.tolist())
+                else:
+                    matrices.append(Notation.simplify_single_matrix(Operator(grouped_gates[i][j].operation).data.tolist()).copy())
+
+            matrix_gate_json_list.append({"content": matrices, "type": "GATE","key": i+1})
+
+        return matrix_gate_json_list
+
+
     # Create list of matrices of grouped gates which can be used matrix display
     def create_matrix_gate_json(num_qubits, grouped_gates):
 
@@ -212,44 +270,26 @@ class Notation:
 
         return matrix_gate_json_list
 
-    def format_matrix_state_vectors_for_dirac_state(state_vector):
+    def format_matrix_state_vectors_for_dirac_state(num_qubits, state_vector):
 
         dirac_state_json = []
+        format_val = '0' + str(num_qubits)+'b'
 
         for i in range(0, len(state_vector)):
             values = []
             for j in range(0, len(state_vector[i]["content"])):
                 # if the state exists, convert it into binary
                 if state_vector[i]["content"][j][0] != 0:
-                    values.append({"bin": format(j, 'b'), "scalar": state_vector[i]["content"][j][0]})
+                    values.append({"bin": format(j, format_val), "scalar": state_vector[i]["content"][j][0]})
             dirac_state_json.append({"content": values, "type": "STATE", "key": i})
 
         return dirac_state_json
-
-    def create_matrix_gate_json_with_tensor_product(num_qubits, operation_list): 
-
-        matrix_gate_json_list = []
-
-        for i in range(0, len(operation_list)):
-
-            matrices = []
-            min_qubit = num_qubits
-            max_qubit = 0
-
-            for j in range(0, len(operation_list[i])):
-
-                matrices.append(Notation.simplify_values_matrix(Operator(operation_list[i][0].operation).data))
-
-            matrix_gate_json_list.append({"content": matrices, "type": "GATE","key": i+1})
-
-        return matrix_gate_json_list
-    
 
     #TODO optimize more
     def group_gates(num_qubits, circuit):
         gates = circuit.data
 
-        columns = [[None for i in range(0, num_qubits)] for j in range(0, 3)]
+        columns = [[None for i in range(0, num_qubits)]]
         column_pointer = 0
 
         while len(gates) > 0:
