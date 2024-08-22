@@ -257,7 +257,7 @@ class Notation:
 
 
     # Create list of matrices of grouped gates which can be used matrix display
-    def create_matrix_gate_json(num_qubits, grouped_gates):
+    def create_matrix_gate_json(num_qubits, grouped_gates, little_endian):
 
         identity_matrix = np.array([[1, 0], [0, 1]])
 
@@ -267,6 +267,10 @@ class Notation:
         for i in range(0, len(grouped_gates)):
 
             matrix = []
+
+            # current_col = grouped_gates[i].deepcopy()
+            # if little_endian:
+            #     current_col = vurr
             # Matrix calculations for column
             for j in range(0, num_qubits):
                 if grouped_gates[i][j] == "MARKED":
@@ -300,7 +304,7 @@ class Notation:
         return dirac_state_json
 
     #TODO optimize more
-    def group_gates(num_qubits, circuit):
+    def group_gates(num_qubits, circuit, little_endian=True):
         gates = circuit.data
 
         columns = [[None for i in range(0, num_qubits)]]
@@ -323,6 +327,10 @@ class Notation:
                 else:
                     # print("MARKED A STATE")
                     columns[column_pointer][gate_indices[i]] = "MARKED"
+
+        if little_endian:
+            for i in range(0, len(columns)):
+                columns[i].reverse()
 
         return columns
 

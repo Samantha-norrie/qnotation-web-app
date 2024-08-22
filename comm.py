@@ -19,6 +19,8 @@ def get_notation_data():
     num_qubits = 0
     message = ""
     status = 200
+
+    little_endian = True
     
     try:
         circuit_details = Notation.process_circuit_received(qc_string)
@@ -30,10 +32,11 @@ def get_notation_data():
             raise TooManyQubitsForApp
 
         grouped_gates = Notation.group_gates(num_qubits, qc)
+
         print("GROUPED GATES", grouped_gates)
         # no extra gates added at this point
 
-        matrix_gates = Notation.create_matrix_gate_json(num_qubits, grouped_gates)
+        matrix_gates = Notation.create_matrix_gate_json(num_qubits, grouped_gates, little_endian)
         print("AFTER MATRIX", matrix_gates)
 
         matrix_state_vectors = Notation.create_matrix_state_vector_json(num_qubits, matrix_gates)
