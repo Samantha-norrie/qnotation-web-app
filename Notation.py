@@ -9,6 +9,7 @@ import subprocess
 import sys
 import os
 import tempfile
+from Utils import * 
 
 class Notation:
 
@@ -131,6 +132,17 @@ class Notation:
                     raise InvalidGate
                 
         return qc
+    
+    def get_gate_type(gate, gate_name, qubit):
+        if gate_name in CONTROL_TARGET_GATE_NAMES:
+            return CONTROL_GATE_TYPE if gate.qubits[0].index == qubit else TARGET_GATE_TYPE
+        elif gate_name in CONTROL_CONTROL_TARGET_GATE_NAMES:
+            return CONTROL_GATE_TYPE if gate.qubits[2].index != qubit else TARGET_GATE_TYPE
+        elif gate_name in CONTROL_CONTROL_TARGET_GATE_NAMES:
+            return CONTROL_GATE_TYPE if gate.qubits[3].index != qubit else TARGET_GATE_TYPE
+        else:
+            return NEUTRAL_GATE_TYPE  
+
 
     # TODO fix continuation flag
     # Create list of grouped gates which can be used for circuit and Dirac display
@@ -143,11 +155,13 @@ class Notation:
             content = []
             for j in range(0, num_qubits):
                 if type(grouped_gates[i][j]) == CircuitInstruction:
-                    content.append({"gate": grouped_gates[i][j].operation.name.upper(), "continuation": False })
+                    print("GATE", grouped_gates[i][j])
+                    name = grouped_gates[i][j].operation.name
+                    content.append({"gate": name.upper(), "gate_type": Notation.get_gate_type(grouped_gates[i][j], name, j), "continuation": False })
                 elif grouped_gates[i][j] == "MARKED":
-                    content.append({"gate": "", "continuation": True})
+                    content.append({"gate": "", "gate_type": BETWEEN_GATE_TYPE, "continuation": True})
                 else: 
-                    content.append({"gate": "I", "continuation": False})
+                    content.append({"gate": "I", "gate_type": NEUTRAL_GATE_TYPE, "continuation": False})
         
 
     
@@ -307,6 +321,7 @@ class Notation:
                 if i == 0:
                     columns[column_pointer][gate_indices[i]] = gate
                 else:
+                    # print("MARKED A STATE")
                     columns[column_pointer][gate_indices[i]] = "MARKED"
 
         return columns

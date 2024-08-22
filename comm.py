@@ -23,15 +23,18 @@ def get_notation_data():
     try:
         circuit_details = Notation.process_circuit_received(qc_string)
 
-        qc = Notation.convert_input_gates(circuit_details[0], circuit_details[1])
+        qc = Notation.convert_input_gates(circuit_details[0], circuit_details[1]) #.reverse_bits()
 
         num_qubits = qc.num_qubits
         if num_qubits > 5 : 
             raise TooManyQubitsForApp
 
         grouped_gates = Notation.group_gates(num_qubits, qc)
+        print("GROUPED GATES", grouped_gates)
+        # no extra gates added at this point
 
         matrix_gates = Notation.create_matrix_gate_json(num_qubits, grouped_gates)
+        print("AFTER MATRIX", matrix_gates)
 
         matrix_state_vectors = Notation.create_matrix_state_vector_json(num_qubits, matrix_gates)
 
@@ -58,8 +61,8 @@ def get_notation_data():
     #     print("ERROR ", e)
     #     message = MESSAGE_UNKNOWN_ERROR
     #     status = 500
-    print("TENSOR", matrix_gates_tensor_product)
-    print("CONDENSED", matrix_gates)
+    # print("TENSOR", matrix_gates_tensor_product)
+    # print("CONDENSED", matrix_gates)
     return jsonify({'matrix_gates': matrix_gates,
                     'matrix_gates_tensor_products': matrix_gates_tensor_product,
                     'matrix_state_vectors': matrix_state_vectors,
