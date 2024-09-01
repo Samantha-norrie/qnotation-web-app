@@ -68,6 +68,8 @@ class Notation:
                     qc.cs(gates[i].qubits[0].index, gates[i].qubits[1].index)
                 case "cswap":
                     qc.cswap(gates[i].qubits[0].index, gates[i].qubits[1].index, gates[i].qubits[2].index)
+                case "crx":
+                    qc.crx(gates[i].operation.params[0], gates[i].qubits[0].index, gates[i].qubits[1].index)
                 case "csx":
                     qc.csx(gates[i].qubits[0].index, gates[i].qubits[1].index)
                 case "cx":
@@ -133,14 +135,35 @@ class Notation:
                 
         return qc
     
-    def get_matrix_for_multi_qubit_big_endian(name):
+    def get_matrix_for_multi_qubit_big_endian(gate):
+        name = gate.operation.name
         match name:
             case "ch":
                 return CH_BE
+            case "crx":
+                theta = gate.operation.params[0]
+                return get_crx(theta)
+            case "cry":
+                theta = gate.operation.params[0]
+                return get_cry(theta)
+            case "crz":
+                theta = gate.operation.params[0]
+                return get_crz(theta)
+            case "cs":
+                return Operator(gate.operation).data
+            case "csx":
+                return CSX_BE
+            case "cswap":
+                return CSWAP_BE
             case "cx":
                 return CX_BE
+            case "cy":
+                return CY_BE
+            case "cz":
+                # same lol
+                return Operator(gate.operation).data 
             case _:
-                return None
+                return []
     
     def get_gate_type(gate, gate_name, qubit):
         if gate_name in CONTROL_TARGET_GATE_NAMES:
@@ -270,7 +293,7 @@ class Notation:
     def is_non_neighbouring_gate(gate):
         num_qubits = len(gate.qubits)
         if num_qubits > 1:
-            if math.abs(gate.qubits[0].index-gate.qubits[1].index) > 1:
+            if math.fabs(gate.qubits[0].index-gate.qubits[1].index) > 1:
                 return True
             
         return False
@@ -303,7 +326,11 @@ class Notation:
                 # if there is no gate in the progress of being described, apply an identity matrix 
                 elif not gate_incomplete and matrix == [] and grouped_gates[i][j] == None:
                     matrix = identity_matrix
-
+                    print("FIRST IDENTITY")
+                # if a matrix has been applied already but there is no gate at qubit or gate in progress, apply identity   
+                elif not gate_incomplete and grouped_gates[i][j] == None:
+                    matrix = np.kron(matrix, identity_matrix)
+                    print("SECOND IDENTITY")
                 # if no matrix has been applied yet...
                 elif matrix == []:
                     if gate_incomplete:
@@ -315,19 +342,16 @@ class Notation:
                         matrix = Operator(grouped_gates[i][j].operation).data
                     # if big endian, ensure that the correct matrix is being applied (for multi-qubit gates only)
                     else:
-                        new_matrix = Notation.get_matrix_for_multi_qubit_big_endian(grouped_gates[i][j].operation.name)
+                        new_matrix = Notation.get_matrix_for_multi_qubit_big_endian(grouped_gates[i][j])
                         print("new matrix", new_matrix)
                         if new_matrix != []:
                             print("applying!")
 
-                            matrix = np.kron(matrix, new_matrix)
+                            matrix = new_matrix
                             print("after application", matrix)
                         
                         else:
-                            matrix = np.kron(matrix, Operator(grouped_gates[i][j].operation).data)
-                # if a matrix has been applied already but there is no gate at qubit or gate in progress, apply identity   
-                elif not gate_incomplete and grouped_gates[i][j] == None:
-                    matrix = np.kron(matrix, identity_matrix)
+                            matrix = Operator(grouped_gates[i][j].operation).data
                 elif little_endian:
                     print("IN LITTLE ENDIAN")
                     matrix = np.kron(matrix, Operator(grouped_gates[i][j].operation).data)
@@ -340,7 +364,7 @@ class Notation:
                         print("IN LITTLE ENDIAN")
                         matrix = np.kron(matrix, Operator(grouped_gates[i][j].operation).data)
                     else:
-                        new_matrix = Notation.get_matrix_for_multi_qubit_big_endian(grouped_gates[i][j].operation.name)
+                        new_matrix = Notation.get_matrix_for_multi_qubit_big_endian(grouped_gates[i][j])
                         print("new matrix", new_matrix)
                         if new_matrix != []:
                             print("applying!")
