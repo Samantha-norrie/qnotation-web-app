@@ -4,7 +4,7 @@ from qiskit.circuit import CircuitInstruction, Instruction, Qubit
 from Errors import InvalidGate
 import numpy as np
 import copy
-
+import math
 import subprocess
 import sys
 import os
@@ -133,6 +133,15 @@ class Notation:
                 
         return qc
     
+    def get_matrix_for_multi_qubit_big_endian(name):
+        match name:
+            case "ch":
+                return CH_BE
+            case "cx":
+                return CX_BE
+            case _:
+                return None
+    
     def get_gate_type(gate, gate_name, qubit):
         if gate_name in CONTROL_TARGET_GATE_NAMES:
             return CONTROL_GATE_TYPE if gate.qubits[0].index == qubit else TARGET_GATE_TYPE
@@ -155,8 +164,10 @@ class Notation:
             content = []
             for j in range(0, num_qubits):
                 if type(grouped_gates[i][j]) == CircuitInstruction:
-                    print("GATE", grouped_gates[i][j])
+                    # print("GATE", grouped_gates[i][j])
+                    # if type(grouped_gates[i][j].operation) == dict:
                     name = grouped_gates[i][j].operation.name
+
                     content.append({"gate": name.upper(), "gate_type": Notation.get_gate_type(grouped_gates[i][j], name, j), "continuation": False })
                 elif grouped_gates[i][j] == "MARKED":
                     content.append({"gate": "", "gate_type": BETWEEN_GATE_TYPE, "continuation": True})
@@ -255,9 +266,20 @@ class Notation:
 
         return matrix_gate_json_list
 
+    # TODO implement for gates that involve more than 2 qubits
+    def is_non_neighbouring_gate(gate):
+        num_qubits = len(gate.qubits)
+        if num_qubits > 1:
+            if math.abs(gate.qubits[0].index-gate.qubits[1].index) > 1:
+                return True
+            
+        return False
+
 
     # Create list of matrices of grouped gates which can be used matrix display
-    def create_matrix_gate_json(num_qubits, grouped_gates, little_endian):
+    #TODO clean
+    # TODO implement non neighbouring gate flag
+    def create_matrix_gate_json(num_qubits, grouped_gates, little_endian=False):
 
         identity_matrix = np.array([[1, 0], [0, 1]])
 
@@ -267,25 +289,69 @@ class Notation:
         for i in range(0, len(grouped_gates)):
 
             matrix = []
+            print("INITIAL GATES", grouped_gates)
 
-            # current_col = grouped_gates[i].deepcopy()
-            # if little_endian:
-            #     current_col = vurr
             # Matrix calculations for column
+            gate_incomplete = False
             for j in range(0, num_qubits):
+                # if qubit is a target qubit, end 
                 if grouped_gates[i][j] == "MARKED":
+                    gate_incomplete = not gate_incomplete
                     continue
-                elif matrix == [] and grouped_gates[i][j] == None:
+                elif gate_incomplete and grouped_gates[i][j] == None:
+                    continue
+                # if there is no gate in the progress of being described, apply an identity matrix 
+                elif not gate_incomplete and matrix == [] and grouped_gates[i][j] == None:
                     matrix = identity_matrix
+
+                # if no matrix has been applied yet...
                 elif matrix == []:
-                    matrix = Operator(grouped_gates[i][j].operation).data
-                elif grouped_gates[i][j] == None:
+                    if gate_incomplete:
+                        gate_incomplete = False
+                    elif Notation.is_non_neighbouring_gate(grouped_gates[i][j]):
+                        gate_incomplete = True
+                    # if little endian, apply as normal
+                    if little_endian:
+                        matrix = Operator(grouped_gates[i][j].operation).data
+                    # if big endian, ensure that the correct matrix is being applied (for multi-qubit gates only)
+                    else:
+                        new_matrix = Notation.get_matrix_for_multi_qubit_big_endian(grouped_gates[i][j].operation.name)
+                        print("new matrix", new_matrix)
+                        if new_matrix != []:
+                            print("applying!")
+
+                            matrix = np.kron(matrix, new_matrix)
+                            print("after application", matrix)
+                        
+                        else:
+                            matrix = np.kron(matrix, Operator(grouped_gates[i][j].operation).data)
+                # if a matrix has been applied already but there is no gate at qubit or gate in progress, apply identity   
+                elif not gate_incomplete and grouped_gates[i][j] == None:
                     matrix = np.kron(matrix, identity_matrix)
-                else:
+                elif little_endian:
+                    print("IN LITTLE ENDIAN")
                     matrix = np.kron(matrix, Operator(grouped_gates[i][j].operation).data)
+                else:
+                    if gate_incomplete:
+                        gate_incomplete = False
+                    elif Notation.is_non_neighbouring_gate(grouped_gates[i][j]):
+                        gate_incomplete = True
+                    if little_endian:
+                        print("IN LITTLE ENDIAN")
+                        matrix = np.kron(matrix, Operator(grouped_gates[i][j].operation).data)
+                    else:
+                        new_matrix = Notation.get_matrix_for_multi_qubit_big_endian(grouped_gates[i][j].operation.name)
+                        print("new matrix", new_matrix)
+                        if new_matrix != []:
+                            print("applying!")
+
+                            matrix = np.kron(matrix, new_matrix)
+                            print("after application", matrix)
+                        else:
+                            matrix = np.kron(matrix, Operator(grouped_gates[i][j].operation).data)
             
             matrix_gate_json_list.append({"content": matrix.tolist(), "type": "GATE","key": i+1})
-
+        print("finished matrix building")
         return matrix_gate_json_list
 
     def format_matrix_state_vectors_for_dirac_state(num_qubits, state_vector):
@@ -302,9 +368,25 @@ class Notation:
             dirac_state_json.append({"content": values, "type": "STATE", "key": i})
 
         return dirac_state_json
+    
+    #TODO CLEAN UP
+    def fix_multi_qubit_gates_for_big_endian(grouped_gates):
+        for i in range(0, len(grouped_gates)):
+            for j in range(0, len(grouped_gates[i])):
+                if type(grouped_gates[i][j]) == CircuitInstruction:
+                    name = grouped_gates[i][j].operation.name
+                    match name:
+                        case "ch":
+                            return CH_BE
+                        case "cx":
+                            return CX_BE
+                        case _:
+                            return []
+
+
 
     #TODO optimize more
-    def group_gates(num_qubits, circuit, little_endian=True):
+    def group_gates(num_qubits, circuit, little_endian=False):
         gates = circuit.data
 
         columns = [[None for i in range(0, num_qubits)]]
@@ -331,8 +413,7 @@ class Notation:
         if little_endian:
             for i in range(0, len(columns)):
                 columns[i].reverse()
+        # else:
+        #     Notation.fix_multi_qubit_gates_for_big_endian(columns)
 
         return columns
-
-
-

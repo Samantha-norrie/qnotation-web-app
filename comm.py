@@ -11,11 +11,16 @@ def get_notation_data():
     data = request.form.to_dict()
 
     qc_string = data.get('data[qc]')
-    matrix_gates = None
-    matrix_gates_tensor_product = None
-    matrix_state_vectors = None
-    circuit_dirac_gates = None
-    dirac_state_vectors = None
+    matrix_gates_le = None
+    matrix_gates_be = None
+    matrix_gates_tensor_product_le = None
+    matrix_gates_tensor_product_be = None
+    matrix_state_vector_le = None
+    matrix_state_vector_be = None
+    circuit_dirac_gate_le = None
+    circuit_dirac_gate_be = None
+    dirac_state_vector_le = None
+    dirac_state_vector_be = None
     num_qubits = 0
     message = ""
     status = 200
@@ -31,26 +36,41 @@ def get_notation_data():
         if num_qubits > 5 : 
             raise TooManyQubitsForApp
 
-        grouped_gates = Notation.group_gates(num_qubits, qc)
+        grouped_gates_le = Notation.group_gates(num_qubits, qc.copy(), little_endian)
+        grouped_gates_be = Notation.group_gates(num_qubits, qc)
 
-        print("GROUPED GATES", grouped_gates)
+        # if not little_endian:
+
+
+        print("GROUPED GATES LE", grouped_gates_le)
+        # print("GROUPED GATES BE", grouped_gates_be)
         # no extra gates added at this point
 
-        matrix_gates = Notation.create_matrix_gate_json(num_qubits, grouped_gates, little_endian)
-        print("AFTER MATRIX", matrix_gates)
+        matrix_gates_le = Notation.create_matrix_gate_json(num_qubits, grouped_gates_le, little_endian)
+        # matrix_gates_be = Notation.create_matrix_gate_json(num_qubits, grouped_gates_be)
+        print("AFTER MATRIX", matrix_gates_le)
+        # print("AFTER MATRIX", matrix_gates_be)
 
-        matrix_state_vectors = Notation.create_matrix_state_vector_json(num_qubits, matrix_gates)
+        matrix_state_vector_le = Notation.create_matrix_state_vector_json(num_qubits, matrix_gates_le)
+        # matrix_state_vector_be = Notation.create_matrix_state_vector_json(num_qubits, matrix_gates_be)
 
-        matrix_gates = Notation.simplify_values_matrix(matrix_gates)
+        matrix_gates_le = Notation.simplify_values_matrix(matrix_gates_le)
+        # matrix_gates_be = Notation.simplify_values_matrix(matrix_gates_be)
 
-        dirac_state_vectors = Notation.format_matrix_state_vectors_for_dirac_state(num_qubits, matrix_state_vectors)
+        dirac_state_vector_le = Notation.format_matrix_state_vectors_for_dirac_state(num_qubits, matrix_state_vector_le)
+        # dirac_state_vector_be = Notation.format_matrix_state_vectors_for_dirac_state(num_qubits, matrix_state_vector_be)
         if num_qubits <= 3:
-            matrix_gates_tensor_product = Notation.create_tensor_product_matrix_gate_json(num_qubits, grouped_gates)
-            matrix_gates_tensor_product.insert(0, matrix_state_vectors[0])
+            matrix_gates_tensor_product_le = Notation.create_tensor_product_matrix_gate_json(num_qubits, grouped_gates_le)
+            matrix_gates_tensor_product_le.insert(0, matrix_state_vector_le[0])
 
-        matrix_gates.insert(0, matrix_state_vectors[0])
+            # matrix_gates_tensor_product_be = Notation.create_tensor_product_matrix_gate_json(num_qubits, grouped_gates_be)
+            # matrix_gates_tensor_product_be.insert(0, matrix_state_vector_be[0])
 
-        circuit_dirac_gates= Notation.create_circuit_dirac_gates_json(num_qubits, grouped_gates)
+        matrix_gates_le.insert(0, matrix_state_vector_le[0])
+        # matrix_gates_be.insert(0, matrix_state_vector_be[0])
+
+        circuit_dirac_gate_le= Notation.create_circuit_dirac_gates_json(num_qubits, grouped_gates_le)
+        # circuit_dirac_gate_be= Notation.create_circuit_dirac_gates_json(num_qubits, grouped_gates_be)
     except TooManyQubitsForApp:
         message = MESSAGE_TOO_MANY_QUBITS_FOR_APP
         status = 500
@@ -66,14 +86,43 @@ def get_notation_data():
     #     status = 500
     # print("TENSOR", matrix_gates_tensor_product)
     # print("CONDENSED", matrix_gates)
-    return jsonify({'matrix_gates': matrix_gates,
-                    'matrix_gates_tensor_products': matrix_gates_tensor_product,
-                    'matrix_state_vectors': matrix_state_vectors,
-                    'circuit_dirac_gates': circuit_dirac_gates,
-                    'dirac_state_vectors': dirac_state_vectors,
-                    'num_qubits': num_qubits,
-                    'message': message,
-        'status': status})
+    # print("matrix_gates_le", matrix_gates_le)
+    # print("matrix_gates_be", matrix_gates_be)
+    # print("matrix_gates_tensor_product_le", matrix_gates_tensor_product_le)
+    # print("matrix_gates_tensor_product_be", matrix_gates_tensor_product_be)
+    # print('matrix_state_vector_le', matrix_state_vector_le)
+    # print('matrix_state_vector_be', matrix_state_vector_be)
+    print('circuit_dirac_gate_le', circuit_dirac_gate_le)
+    # print('circuit_dirac_gate_be', circuit_dirac_gate_be)
+    # print('dirac_state_vector_le', dirac_state_vector_le)
+    # print('dirac_state_vector_be', dirac_state_vector_be)
+
+    # return jsonify({'matrix_gates_le': matrix_gates_le,
+    #                 'matrix_gates_be': matrix_gates_be,
+    #                 'matrix_gates_tensor_product_le': matrix_gates_tensor_product_le,
+    #                 'matrix_gates_tensor_product_be': matrix_gates_tensor_product_be,
+    #                 'matrix_state_vector_le': matrix_state_vector_le,
+    #                 'matrix_state_vector_be': matrix_state_vector_be,
+    #                 'circuit_dirac_gate_le': circuit_dirac_gate_le,
+    #                 'circuit_dirac_gate_be': circuit_dirac_gate_be,
+    #                 'dirac_state_vector_le': dirac_state_vector_le,
+    #                 'dirac_state_vector_be': dirac_state_vector_be,
+    #                 'num_qubits': num_qubits,
+    #                 'message': message,
+    #     'status': status})
+    return jsonify({'matrix_gates_le': matrix_gates_le,
+                'matrix_gates_be': matrix_gates_le,
+                'matrix_gates_tensor_product_le': matrix_gates_tensor_product_le,
+                'matrix_gates_tensor_product_be': matrix_gates_tensor_product_le,
+                'matrix_state_vector_le': matrix_state_vector_le,
+                'matrix_state_vector_be': matrix_state_vector_le,
+                'circuit_dirac_gate_le': circuit_dirac_gate_le,
+                'circuit_dirac_gate_be': circuit_dirac_gate_le,
+                'dirac_state_vector_le': dirac_state_vector_le,
+                'dirac_state_vector_be': dirac_state_vector_le,
+                'num_qubits': num_qubits,
+                'message': message,
+    'status': status})
 
 if __name__ == "__main__":
     app.run(port=8001, debug=True)
