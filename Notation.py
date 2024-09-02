@@ -346,7 +346,8 @@ class Notation:
                         gate_incomplete = True
                     # if little endian, apply as normal
                     if little_endian:
-
+                        # if single qubit gate, apply as normal
+                        # TODO is distinction between single and multi needed for little endian?
                         matrix = get_non_neighbouring_LE_matrix(grouped_gates[i][j]) if Notation.is_non_neighbouring_gate(grouped_gates[i][j]) else Operator(grouped_gates[i][j].operation).data
                     # if big endian, ensure that the correct matrix is being applied (for multi-qubit gates only)
                     else:
@@ -354,8 +355,11 @@ class Notation:
                         print("new matrix", new_matrix)
                         if new_matrix != []:
                             print("applying!")
+                            if Notation.is_non_neighbouring_gate(grouped_gates[i][j]):
+                                gate_incomplete = not gate_incomplete
 
                             matrix = new_matrix
+                            gate_incomplete = not gate_incomplete
                             print("after application", matrix)
                         
                         else:
@@ -376,6 +380,8 @@ class Notation:
                         print("new matrix", new_matrix)
                         if new_matrix != []:
                             print("applying!")
+                            if Notation.is_non_neighbouring_gate(grouped_gates[i][j]):
+                                gate_incomplete = not gate_incomplete
 
                             matrix = np.kron(matrix, new_matrix)
                             print("after application", matrix)
