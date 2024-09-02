@@ -137,11 +137,14 @@ class Notation:
     
     def get_matrix_for_multi_qubit_big_endian(gate):
         name = gate.operation.name
+        non_neighbouring = Notation.is_non_neighbouring_gate(gate)
         match name:
             case "ch":
                 return CH_BE
             case "crx":
                 theta = gate.operation.params[0]
+                if non_neighbouring:
+                    get_crx(theta, False, 1)
                 return get_crx(theta)
             case "cry":
                 theta = gate.operation.params[0]
@@ -156,8 +159,12 @@ class Notation:
             case "cswap":
                 return CSWAP_BE
             case "cx":
+                if non_neighbouring:
+                    return CX_BE_ONE_GAP
                 return CX_BE
             case "cy":
+                if non_neighbouring:
+                    return CY_BE_ONE_GAP
                 return CY_BE
             case "cz":
                 # same lol
@@ -339,7 +346,8 @@ class Notation:
                         gate_incomplete = True
                     # if little endian, apply as normal
                     if little_endian:
-                        matrix = Operator(grouped_gates[i][j].operation).data
+
+                        matrix = get_non_neighbouring_LE_matrix(grouped_gates[i][j]) if Notation.is_non_neighbouring_gate(grouped_gates[i][j]) else Operator(grouped_gates[i][j].operation).data
                     # if big endian, ensure that the correct matrix is being applied (for multi-qubit gates only)
                     else:
                         new_matrix = Notation.get_matrix_for_multi_qubit_big_endian(grouped_gates[i][j])
@@ -354,7 +362,7 @@ class Notation:
                             matrix = Operator(grouped_gates[i][j].operation).data
                 elif little_endian:
                     print("IN LITTLE ENDIAN")
-                    matrix = np.kron(matrix, Operator(grouped_gates[i][j].operation).data)
+                    matrix = np.kron(matrix, get_non_neighbouring_LE_matrix(grouped_gates[i][j]) if Notation.is_non_neighbouring_gate(grouped_gates[i][j]) else Operator(grouped_gates[i][j].operation).data)
                 else:
                     if gate_incomplete:
                         gate_incomplete = False
@@ -362,7 +370,7 @@ class Notation:
                         gate_incomplete = True
                     if little_endian:
                         print("IN LITTLE ENDIAN")
-                        matrix = np.kron(matrix, Operator(grouped_gates[i][j].operation).data)
+                        matrix = np.kron(matrix, get_non_neighbouring_LE_matrix(grouped_gates[i][j]) if Notation.is_non_neighbouring_gate(grouped_gates[i][j]) else Operator(grouped_gates[i][j].operation).data)
                     else:
                         new_matrix = Notation.get_matrix_for_multi_qubit_big_endian(grouped_gates[i][j])
                         print("new matrix", new_matrix)
@@ -393,22 +401,6 @@ class Notation:
 
         return dirac_state_json
     
-    #TODO CLEAN UP
-    def fix_multi_qubit_gates_for_big_endian(grouped_gates):
-        for i in range(0, len(grouped_gates)):
-            for j in range(0, len(grouped_gates[i])):
-                if type(grouped_gates[i][j]) == CircuitInstruction:
-                    name = grouped_gates[i][j].operation.name
-                    match name:
-                        case "ch":
-                            return CH_BE
-                        case "cx":
-                            return CX_BE
-                        case _:
-                            return []
-
-
-
     #TODO optimize more
     def group_gates(num_qubits, circuit, little_endian=False):
         gates = circuit.data
