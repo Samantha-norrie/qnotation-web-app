@@ -172,15 +172,13 @@ class Notation:
             case _:
                 return []
     
-    def get_gate_type(gate, gate_name, qubit):
-        if gate_name in CONTROL_TARGET_GATE_NAMES:
-            return CONTROL_GATE_TYPE if gate.qubits[0].index == qubit else TARGET_GATE_TYPE
-        elif gate_name in CONTROL_CONTROL_TARGET_GATE_NAMES:
-            return CONTROL_GATE_TYPE if gate.qubits[2].index != qubit else TARGET_GATE_TYPE
-        elif gate_name in CONTROL_CONTROL_TARGET_GATE_NAMES:
-            return CONTROL_GATE_TYPE if gate.qubits[3].index != qubit else TARGET_GATE_TYPE
-        else:
-            return NEUTRAL_GATE_TYPE  
+    def is_multi_qubit_gate(gate):
+        name = gate.operation.name
+
+        if name in CONTROL_CONTROL_CONTROL_TARGET_GATE_NAMES or \
+            name in CONTROL_CONTROL_TARGET_GATE_NAMES or CONTROL_TARGET_GATE_NAMES:
+            return True
+        return False
 
 
     # TODO fix continuation flag
@@ -190,6 +188,7 @@ class Notation:
 
         circuit_json_list.append({"content": [[0] for i in range(0, num_qubits)], "type": "QUBIT","key": 0})
 
+        incomplete_gate = False
         for i in range(0, len(grouped_gates)):
             content = []
             for j in range(0, num_qubits):
@@ -198,11 +197,19 @@ class Notation:
                     # if type(grouped_gates[i][j].operation) == dict:
                     name = grouped_gates[i][j].operation.name
 
-                    content.append({"gate": name.upper(), "gate_type": Notation.get_gate_type(grouped_gates[i][j], name, j), "continuation": False })
+                    if Notation.is_multi_qubit_gate(grouped_gates[i][j]):
+                        incomplete_gate = not incomplete_gate
+                        content.append({"gate": name.upper(), "gate_type": CONTROL_GATE_TYPE})
+                    else:
+                        content.append({"gate": name.upper(), "gate_type": NEUTRAL_GATE_TYPE})
                 elif grouped_gates[i][j] == "MARKED":
-                    content.append({"gate": "", "gate_type": BETWEEN_GATE_TYPE, "continuation": True})
+                    incomplete_gate = not incomplete_gate
+                    content.append({"gate": "", "gate_type": TARGET_GATE_TYPE})
                 else: 
-                    content.append({"gate": "I", "gate_type": NEUTRAL_GATE_TYPE, "continuation": False})
+                    if incomplete_gate:
+                        content.append({"gate": "", "gate_type": BETWEEN_GATE_TYPE})
+                    else:
+                        content.append({"gate": "I", "gate_type": NEUTRAL_GATE_TYPE})
         
 
     
