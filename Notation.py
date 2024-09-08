@@ -64,6 +64,8 @@ class Notation:
         qc = QuantumCircuit(num_qubits)
         for i in range(0, len(gates)):
             match gates[i].operation.name:
+                case "cp":
+                    qc.cp(gates[i].operation.params[0], gates[i].qubits[0].index, gates[i].qubits[1].index)       
                 case "cs":
                     qc.cs(gates[i].qubits[0].index, gates[i].qubits[1].index)
                 case "cswap":
@@ -141,16 +143,27 @@ class Notation:
         match name:
             case "ch":
                 return CH_BE
+            case "cp":
+                if non_neighbouring:
+                    phi = gate.operation.params[0]
+                    if non_neighbouring:
+                        return get_cp(phi, 1)
+                    return get_cp()
+                return Operator(gate.operation).data 
             case "crx":
                 theta = gate.operation.params[0]
                 if non_neighbouring:
-                    get_crx(theta, False, 1)
+                    return get_crx(theta, False, 1)
                 return get_crx(theta)
             case "cry":
                 theta = gate.operation.params[0]
+                if non_neighbouring:
+                    return get_cry(theta,1)
                 return get_cry(theta)
             case "crz":
                 theta = gate.operation.params[0]
+                if non_neighbouring:
+                    return get_crz(theta, 1)
                 return get_crz(theta)
             case "cs":
                 return Operator(gate.operation).data
@@ -172,15 +185,6 @@ class Notation:
             case _:
                 return []
     
-    def is_multi_qubit_gate(gate):
-        name = gate.operation.name
-
-        if name in CONTROL_CONTROL_CONTROL_TARGET_GATE_NAMES or \
-            name in CONTROL_CONTROL_TARGET_GATE_NAMES or CONTROL_TARGET_GATE_NAMES:
-            return True
-        return False
-
-
     # TODO fix continuation flag
     # Create list of grouped gates which can be used for circuit and Dirac display
     def create_circuit_dirac_gates_json(num_qubits, grouped_gates):
@@ -193,18 +197,17 @@ class Notation:
             content = []
             for j in range(0, num_qubits):
                 if type(grouped_gates[i][j]) == CircuitInstruction:
-                    # print("GATE", grouped_gates[i][j])
-                    # if type(grouped_gates[i][j].operation) == dict:
+
                     name = grouped_gates[i][j].operation.name
 
-                    if Notation.is_multi_qubit_gate(grouped_gates[i][j]):
+                    if len(grouped_gates[i][j].qubits) > 1:
                         incomplete_gate = not incomplete_gate
                         content.append({"gate": name.upper(), "gate_type": CONTROL_GATE_TYPE})
                     else:
                         content.append({"gate": name.upper(), "gate_type": NEUTRAL_GATE_TYPE})
                 elif grouped_gates[i][j] == "MARKED":
                     incomplete_gate = not incomplete_gate
-                    content.append({"gate": "", "gate_type": TARGET_GATE_TYPE})
+                    content.append({"gate": "" , "gate_type": TARGET_GATE_TYPE})
                 else: 
                     if incomplete_gate:
                         content.append({"gate": "", "gate_type": BETWEEN_GATE_TYPE})
@@ -218,7 +221,7 @@ class Notation:
         return circuit_json_list
 
     def simplify_single_matrix(matrix):
-
+        
         for j in range(0, len(matrix)):
             for k in range(0, len(matrix[j])):
 
@@ -226,13 +229,13 @@ class Notation:
                 imag_val = float(matrix[j][k].imag)
 
                 if real_val == 0.0 and imag_val == 0.0:
-                    matrix[j][k] = 0.0
+                    matrix[j][k] = 0.000
                 elif round(imag_val,4) == 0.0:     
-                    matrix[j][k] = float(round(real_val,2))
+                    matrix[j][k] = float("{:.3f}".format(real_val))
                 elif round(imag_val,4) == 1.0:
-                    matrix[j][k] = "i"
+                    matrix[j][k] = " i "
                 else:
-                    matrix[j][k] = str(round(real_val,2)) + str(round(imag_val,2)) + "i"
+                    matrix[j][k] = "{:.3f}".format(real_val + imag_val) + "i"
         return matrix
        
     def simplify_values_matrix(matrices):
@@ -281,7 +284,7 @@ class Notation:
 
         return index_list
  
-    def create_tensor_product_matrix_gate_json(num_qubits, grouped_gates):
+    def create_tensor_product_matrix_gate_json(num_qubits, grouped_gates, little_endian=False):
         identity_matrix = np.array([[1, 0], [0, 1]])
 
         matrix_gate_json_list = []
@@ -290,14 +293,23 @@ class Notation:
         for i in range(0, len(grouped_gates)):
 
             matrices = []
+            incomplete_gate = False
             # Matrix calculations for column
             for j in range(0, num_qubits):
-                if grouped_gates[i][j] == "MARKED":
-                    continue
-                elif grouped_gates[i][j] == None:
+                if grouped_gates[i][j] == None and not incomplete_gate:
                     matrices.append(identity_matrix.tolist())
+                elif grouped_gates[i][j] == None:
+                    continue
+                elif grouped_gates[i][j] == "MARKED":
+                    incomplete_gate = not incomplete_gate
+                    continue
                 else:
-                    matrices.append(Notation.simplify_single_matrix(Operator(grouped_gates[i][j].operation).data.tolist()).copy())
+                    if len(grouped_gates[i][j].qubits) > 1:
+                        incomplete_gate = not incomplete_gate
+                        if Notation.is_non_neighbouring_gate(grouped_gates[i][j]) and little_endian:
+                            matrices.append(Notation.simplify_single_matrix(Operator(get_non_neighbouring_LE_matrix(grouped_gates[i][j])).data.tolist()).copy())
+                    else:
+                        matrices.append(Notation.simplify_single_matrix(Operator(grouped_gates[i][j].operation).data.tolist()).copy())
 
             matrix_gate_json_list.append({"content": matrices, "type": "GATE","key": i+1})
 

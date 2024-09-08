@@ -60,7 +60,7 @@ def get_notation_data():
         dirac_state_vector_le = Notation.format_matrix_state_vectors_for_dirac_state(num_qubits, matrix_state_vector_le)
         dirac_state_vector_be = Notation.format_matrix_state_vectors_for_dirac_state(num_qubits, matrix_state_vector_be)
         if num_qubits <= 3:
-            matrix_gates_tensor_product_le = Notation.create_tensor_product_matrix_gate_json(num_qubits, grouped_gates_le)
+            matrix_gates_tensor_product_le = Notation.create_tensor_product_matrix_gate_json(num_qubits, grouped_gates_le, True)
             matrix_gates_tensor_product_le.insert(0, matrix_state_vector_le[0])
 
             matrix_gates_tensor_product_be = Notation.create_tensor_product_matrix_gate_json(num_qubits, grouped_gates_be)
@@ -74,16 +74,17 @@ def get_notation_data():
     except TooManyQubitsForApp:
         message = MESSAGE_TOO_MANY_QUBITS_FOR_APP
         status = 500
-    # except TooManyQubitsForTensor:
-    #     message = MESSAGE_TOO_MANY_QUBITS_FOR_TENSOR
-    #     status = 500
+    except TooManyQubitsForTensor:
+        message = MESSAGE_TOO_MANY_QUBITS_FOR_TENSOR
+        status = 500
     except InvalidGate:
         message = MESSAGE_INVALID_GATE
         status = 500
-    # except Exception as e:
-    #     print("ERROR ", e)
-    #     message = MESSAGE_UNKNOWN_ERROR
-    #     status = 500
+    except Exception as e:
+        print("ERROR ", e)
+        message = MESSAGE_UNKNOWN_ERROR
+        status = 520
+
     # print("TENSOR", matrix_gates_tensor_product)
     # print("CONDENSED", matrix_gates)
     print("matrix_gates_le", matrix_gates_le)
@@ -96,7 +97,6 @@ def get_notation_data():
     print('circuit_dirac_gate_be', circuit_dirac_gate_be)
     print('dirac_state_vector_le', dirac_state_vector_le)
     print('dirac_state_vector_be', dirac_state_vector_be)
-
     return jsonify({'matrix_gates_le': matrix_gates_le,
                     'matrix_gates_be': matrix_gates_be,
                     'matrix_gates_tensor_product_le': matrix_gates_tensor_product_le,
