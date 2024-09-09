@@ -1,10 +1,22 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from Notation import Notation
 from qiskit import *
 from Utils import MESSAGE_TOO_MANY_QUBITS_ERROR, MESSAGE_TOO_MANY_QUBITS_FOR_TENSOR_ERROR, MESSAGE_INVALID_GATE_ERROR, MESSAGE_INPUT_ERROR, MESSAGE_UNKNOWN_ERROR
 from Errors import TooManyQubitsError, TooManyQubitsForTensorError, InvalidGateError, InputError
 
-app = Flask(__name__)
+import os
+
+
+app = Flask(__name__, static_folder='../qnotation_node/build')
+print(app.name)
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    if path != "" and os.path.exists(app.static_folder + '/' + path):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, 'index.html')
 
 @app.post("/get_notation_data")
 def get_notation_data():
