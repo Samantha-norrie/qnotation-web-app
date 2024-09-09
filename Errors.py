@@ -1,8 +1,10 @@
-class InvalidGate(Exception):
+class InputError(Exception):
     pass
-class TooManyQubitsForApp(Exception):
+class InvalidGateError(Exception):
     pass
-class TooManyQubitsForTensor(Exception):
+class TooManyQubitsError(Exception):
+    pass
+class TooManyQubitsForTensorError(Exception):
     pass
 class UnknownError(Exception):
     pass

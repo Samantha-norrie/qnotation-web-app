@@ -2,9 +2,10 @@ from qiskit.quantum_info.operators import Operator
 import numpy as np
 import math
 import cmath
-MESSAGE_TOO_MANY_QUBITS_FOR_APP = "Too many qubits used. Please use 5 qubits or less."
-MESSAGE_TOO_MANY_QUBITS_FOR_TENSOR = "Too many qubits used for tensor setting. Please use 3 qubits or less."
-MESSAGE_INVALID_GATE = "Invalid gate(s) used."
+MESSAGE_INPUT_ERROR = "Invalid input given."
+MESSAGE_TOO_MANY_QUBITS_ERROR = "Too many qubits used. Please use 5 qubits or less."
+MESSAGE_TOO_MANY_QUBITS_FOR_TENSOR_ERROR = "Too many qubits used for tensor setting. Please use 3 qubits or less."
+MESSAGE_INVALID_GATE_ERROR = "Invalid gate(s) used."
 MESSAGE_UNKNOWN_ERROR = "UNKNOWN ERROR"
 NEUTRAL_GATE_TYPE = "NEUTRAL"
 BETWEEN_GATE_TYPE = "BETWEEN"
