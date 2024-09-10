@@ -280,6 +280,8 @@ class Notation:
 
         matrix_gate_json_list = []
 
+        print("initial grouped gates", grouped_gates)
+
         # for each column...
         for i in range(0, len(grouped_gates)):
 
@@ -295,15 +297,17 @@ class Notation:
                     incomplete_gate = not incomplete_gate
                     continue
                 else:
-                    if len(grouped_gates[i][j].qubits) > 1:
+                    if len(grouped_gates[i][j].qubits) > 1 and not little_endian:
                         incomplete_gate = not incomplete_gate
                         if Notation.is_non_neighbouring_gate(grouped_gates[i][j]) and little_endian:
                             matrices.append(Notation.simplify_single_matrix(Operator(get_non_neighbouring_LE_matrix(grouped_gates[i][j])).data.tolist()).copy())
+                        elif not little_endian:
+                            matrices.append(Notation.simplify_single_matrix(Operator(Notation.get_matrix_for_multi_qubit_big_endian(grouped_gates[i][j])).data.tolist()).copy())
                     else:
                         matrices.append(Notation.simplify_single_matrix(Operator(grouped_gates[i][j].operation).data.tolist()).copy())
 
             matrix_gate_json_list.append({"content": matrices, "type": "GATE","key": i+1})
-
+        print("result", matrix_gate_json_list)
         return matrix_gate_json_list
 
     # TODO implement for gates that involve more than 2 qubits
