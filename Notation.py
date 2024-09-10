@@ -280,8 +280,6 @@ class Notation:
 
         matrix_gate_json_list = []
 
-        print("initial grouped gates", grouped_gates)
-
         # for each column...
         for i in range(0, len(grouped_gates)):
 
@@ -307,7 +305,6 @@ class Notation:
                         matrices.append(Notation.simplify_single_matrix(Operator(grouped_gates[i][j].operation).data.tolist()).copy())
 
             matrix_gate_json_list.append({"content": matrices, "type": "GATE","key": i+1})
-        print("result", matrix_gate_json_list)
         return matrix_gate_json_list
 
     # TODO implement for gates that involve more than 2 qubits
