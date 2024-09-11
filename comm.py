@@ -50,6 +50,8 @@ def get_notation_data():
 
         grouped_gates_le = Notation.group_gates(num_qubits, qc.copy(), little_endian)
         grouped_gates_be = Notation.group_gates(num_qubits, qc)
+        print("grouped gates le", grouped_gates_le)
+        print("grouped gates be", grouped_gates_be)
 
         matrix_gates_le = Notation.create_matrix_gate_json(num_qubits, grouped_gates_le, little_endian)
         matrix_gates_be = Notation.create_matrix_gate_json(num_qubits, grouped_gates_be)
@@ -86,10 +88,10 @@ def get_notation_data():
     except InputError:
         message = MESSAGE_INPUT_ERROR
         status = 500
-    except Exception as e:
-        print("ERROR ", e)
-        message = MESSAGE_UNKNOWN_ERROR
-        status = 520
+    # except Exception as e:
+    #     print("ERROR ", e)
+    #     message = MESSAGE_UNKNOWN_ERROR
+    #     status = 520
 
 
     return jsonify({'matrix_gates_le': matrix_gates_le,

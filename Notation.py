@@ -329,12 +329,12 @@ class Notation:
         # for each column...
         for i in range(0, len(grouped_gates)):
 
-            matrix = []
+            matrix = None
 
             # Matrix calculations for column
             gate_incomplete = False
             for j in range(0, num_qubits):
-
+                print("m", matrix)
                 # if qubit is a target qubit, end 
                 if grouped_gates[i][j] == "MARKED":
                     gate_incomplete = not gate_incomplete
@@ -343,7 +343,7 @@ class Notation:
                     continue
 
                 # if there is no gate in the progress of being described, apply an identity matrix 
-                elif not gate_incomplete and matrix == [] and grouped_gates[i][j] == None:
+                elif not gate_incomplete and matrix == None and grouped_gates[i][j] == None:
                     matrix = identity_matrix
 
                 # if a matrix has been applied already but there is no gate at qubit or gate in progress, apply identity   
@@ -351,7 +351,7 @@ class Notation:
                     matrix = np.kron(matrix, identity_matrix)
 
                 # if no matrix has been applied yet...
-                elif matrix == []:
+                elif matrix == None:
                     if gate_incomplete:
                         gate_incomplete = False
                     elif Notation.is_non_neighbouring_gate(grouped_gates[i][j]):
@@ -367,7 +367,7 @@ class Notation:
                     else:
                         new_matrix = Notation.get_matrix_for_multi_qubit_big_endian(grouped_gates[i][j])
 
-                        if new_matrix != []:
+                        if len(new_matrix) != 0:
                             if Notation.is_non_neighbouring_gate(grouped_gates[i][j]):
                                 gate_incomplete = not gate_incomplete
 
@@ -420,7 +420,7 @@ class Notation:
     def group_gates(num_qubits, circuit, little_endian=False):
         gates = circuit.data
 
-        columns = [[None for i in range(0, num_qubits)]]
+        columns = [[[] for i in range(0, num_qubits)]]
         column_pointer = 0
 
         while len(gates) > 0:
@@ -429,12 +429,12 @@ class Notation:
             available = True
 
             for i in range(0, len(gate_indices)):
-                if columns[column_pointer][gate_indices[i]] != None:
+                if columns[column_pointer][gate_indices[i]] != []:
                     available = False
             if not available:
                 column_pointer = column_pointer + 1
                 if column_pointer >= len(columns):
-                    columns.append([None for j in range(0, num_qubits)])
+                    columns.append([[] for j in range(0, num_qubits)])
 
             for i in range(0, len(gate_indices)):
                 if i == 0:
