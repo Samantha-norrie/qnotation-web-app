@@ -287,9 +287,9 @@ class Notation:
             incomplete_gate = False
             # Matrix calculations for column
             for j in range(0, num_qubits):
-                if grouped_gates[i][j] == None and not incomplete_gate:
+                if len(grouped_gates[i][j]) == 0 and not incomplete_gate:
                     matrices.append(identity_matrix.tolist())
-                elif grouped_gates[i][j] == None:
+                elif len(grouped_gates[i][j]) == 0:
                     continue
                 elif grouped_gates[i][j] == "MARKED":
                     incomplete_gate = not incomplete_gate
@@ -329,29 +329,29 @@ class Notation:
         # for each column...
         for i in range(0, len(grouped_gates)):
 
-            matrix = None
+            matrix = []
 
             # Matrix calculations for column
             gate_incomplete = False
             for j in range(0, num_qubits):
-                print("m", matrix)
+                # print("m", matrix)
                 # if qubit is a target qubit, end 
                 if grouped_gates[i][j] == "MARKED":
                     gate_incomplete = not gate_incomplete
                     continue
-                elif gate_incomplete and grouped_gates[i][j] == None:
+                elif gate_incomplete and len(grouped_gates[i][j]) == 0:
                     continue
 
                 # if there is no gate in the progress of being described, apply an identity matrix 
-                elif not gate_incomplete and matrix == None and grouped_gates[i][j] == None:
+                elif not gate_incomplete and len(matrix) == 0 and len(grouped_gates[i][j]) == 0:
                     matrix = identity_matrix
 
                 # if a matrix has been applied already but there is no gate at qubit or gate in progress, apply identity   
-                elif not gate_incomplete and grouped_gates[i][j] == None:
+                elif not gate_incomplete and len(grouped_gates[i][j]) == 0:
                     matrix = np.kron(matrix, identity_matrix)
 
                 # if no matrix has been applied yet...
-                elif matrix == None:
+                elif len(matrix) == 0:
                     if gate_incomplete:
                         gate_incomplete = False
                     elif Notation.is_non_neighbouring_gate(grouped_gates[i][j]):

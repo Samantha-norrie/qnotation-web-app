@@ -8,7 +8,7 @@ import os
 
 
 app = Flask(__name__, static_folder='../qnotation_node/build')
-print(app.name)
+# print(app.name)
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
@@ -50,8 +50,8 @@ def get_notation_data():
 
         grouped_gates_le = Notation.group_gates(num_qubits, qc.copy(), little_endian)
         grouped_gates_be = Notation.group_gates(num_qubits, qc)
-        print("grouped gates le", grouped_gates_le)
-        print("grouped gates be", grouped_gates_be)
+        # print("grouped gates le", grouped_gates_le)
+        # print("grouped gates be", grouped_gates_be)
 
         matrix_gates_le = Notation.create_matrix_gate_json(num_qubits, grouped_gates_le, little_endian)
         matrix_gates_be = Notation.create_matrix_gate_json(num_qubits, grouped_gates_be)
