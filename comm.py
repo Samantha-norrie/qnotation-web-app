@@ -10,7 +10,7 @@ import os
 
 app = Flask(__name__, static_folder='../qnotation_node/build')
 
-CORS(app, resources={{"origins": "https://qnotation.vercel.app/"}})
+CORS(app, resources={r"/*":{"origins": "https://qnotation.vercel.app/"}})
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')

@@ -2,4 +2,4 @@ numpy==1.26.4
 qiskit==0.46.2
 Flask
 gunicorn
-flask-cors==3.0.10
+flask-cors
