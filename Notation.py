@@ -1,138 +1,20 @@
 from qiskit import *
 from qiskit.quantum_info.operators import Operator
 from qiskit.circuit import CircuitInstruction, Instruction, Qubit
-from Errors import InvalidGateError, InputError
+from errors import InvalidGateError, InputError
 import numpy as np
 import math
 import subprocess
 import sys
 import os
 import tempfile
-from Utils import * 
+from utils import * 
 
-class Notation:
-
-    #  Process circuit received from frontend
-    def process_circuit_received(qc_string):
-        qc_code_list = qc_string.split('\n')
-
-        qc_string_formatted = ""
-
-        end_of_imports_found = False
-        for i in range(0, len(qc_code_list)):
-            if not end_of_imports_found and "import numpy as np" in qc_code_list[i]:
-                qc_string_formatted = qc_string_formatted + qc_code_list[i] + "\ndef main():\n"
-                end_of_imports_found = True
-            elif end_of_imports_found:
-                qc_string_formatted = qc_string_formatted + "   " + qc_code_list[i]  + "\n"
-            else:
-                qc_string_formatted = qc_string_formatted + qc_code_list[i] + "\n"
-        qc_string_formatted = qc_string_formatted + "   " + "print([qc.num_qubits, qc.data])" + "\nmain()"
-
-        circuit_details = []
-
-        # Use a temporary file to execute the code securely
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.py') as temp_file:
-            temp_file.write(qc_string_formatted.encode('utf-8'))
-            temp_file_name = temp_file.name
-        try:
-            # Execute the code in the temporary file using a subprocess
-            result = subprocess.run([sys.executable, temp_file_name], capture_output=True, text=True, timeout=5)
-
-            output = result.stdout
-
-            circuit_details = eval(output)
-        except Exception as e:
-            raise InputError
-        finally:
-
-            # Ensure the temporary file is deleted after execution
-            os.remove(temp_file_name)
-
-        return circuit_details
-    
-    #TODO fix eventually
-    def convert_input_gates(num_qubits, gates):
-
-        qc = QuantumCircuit(num_qubits)
-        for i in range(0, len(gates)):
-            match gates[i].operation.name:
-                case "cp":
-                    qc.cp(gates[i].operation.params[0], gates[i].qubits[0].index, gates[i].qubits[1].index)       
-                case "cs":
-                    qc.cs(gates[i].qubits[0].index, gates[i].qubits[1].index)
-                case "cswap":
-                    qc.cswap(gates[i].qubits[0].index, gates[i].qubits[1].index, gates[i].qubits[2].index)
-                case "crx":
-                    qc.crx(gates[i].operation.params[0], gates[i].qubits[0].index, gates[i].qubits[1].index)
-                case "csx":
-                    qc.csx(gates[i].qubits[0].index, gates[i].qubits[1].index)
-                case "cx":
-                    qc.cx(gates[i].qubits[0].index, gates[i].qubits[1].index)
-                case "cy":
-                    qc.cy(gates[i].qubits[0].index, gates[i].qubits[1].index)
-                case "cz":
-                    qc.cz(gates[i].qubits[0].index, gates[i].qubits[1].index)
-                case "dcx":
-                    qc.dcx(gates[i].qubits[0].index, gates[i].qubits[1].index)
-                case "h":
-                    qc.h(gates[i].qubits[0].index)
-                case "iswap":
-                    qc.iswap(gates[i].qubits[0].index, gates[i].qubits[1].index)
-                case "p":
-                    qc.p(gates[i].operation.params[0], gates[i].qubits[0].index)
-                case "r":
-                    qc.r(gates[i].operation.params[0], gates[i].operation.params[1], gates[i].qubits[0].index)
-                case "rcccx":
-                    qc.rcccx(gates[i].qubits[0].index, gates[i].qubits[1].index, gates[i].qubits[2].index, gates[i].qubits[3].index)
-                case "rccx":
-                    qc.rccx(gates[i].qubits[0].index, gates[i].qubits[1].index, gates[i].qubits[2].index)
-                case "rv":
-                    qc.rv(gates[i].operation.params[0], gates[i].operation.params[1], gates[i].operation.params[0], gates[i].qubits[0].index)
-                case "rx":
-                    qc.rx(gates[i].operation.params[0], gates[i].qubits[0].index)
-                case "rxx":
-                    qc.rxx(gates[i].operation.params[0], gates[i].qubits[0].index, gates[i].qubits[1].index)  
-                case "ry":
-                    qc.ry(gates[i].operation.params[0], gates[i].qubits[0].index)   
-                case "ryy":
-                    qc.ryy(gates[i].operation.params[0], gates[i].qubits[0].index, gates[i].qubits[1].index)
-                case "rz":
-                    qc.rz(gates[i].operation.params[0], gates[i].qubits[0].index)
-                case "rzx":
-                    qc.rzx(gates[i].operation.params[0], gates[i].qubits[0].index, gates[i].qubits[1].index)
-                case "rzz":
-                    qc.rzz(gates[i].operation.params[0], gates[i].qubits[0].index, gates[i].qubits[1].index) 
-                case "s":
-                    qc.s(gates[i].qubits[0].index)
-                case "sdg":
-                    qc.sdg(gates[i].qubits[0].index)
-                case "swap":
-                    qc.swap(gates[i].qubits[0].index, gates[i].qubits[1].index)
-                case "sx":
-                    qc.sx(gates[i].qubits[0].index)     
-                case "sxdg":
-                    qc.sxdg(gates[i].qubits[0].index)
-                case "t":
-                    qc.t(gates[i].qubits[0].index) 
-                case "tdg":
-                    qc.tdg(gates[i].qubits[0].index)
-                case "u":
-                    qc.u(gates[i].operation.params[0], gates[i].operation.params[1], gates[i].operation.params[2], gates[i].qubits[0].index)                     
-                case "x":
-                    qc.x(gates[i].qubits[0].index)
-                case "y":
-                    qc.y(gates[i].qubits[0].index)
-                case "z":
-                    qc.z(gates[i].qubits[0].index)
-                case _:
-                    raise InvalidGateError
-                
-        return qc
+class notation:
     
     def get_matrix_for_multi_qubit_big_endian(gate):
         name = gate.operation.name
-        non_neighbouring = Notation.is_non_neighbouring_gate(gate)
+        non_neighbouring = notation.is_non_neighbouring_gate(gate)
         match name:
             case "ch":
                 return CH_BE
@@ -231,7 +113,7 @@ class Notation:
        
     def simplify_values_matrix(matrices):
         for i in range(0, len(matrices)):
-            matrices[i]["content"] = Notation.simplify_single_matrix(matrices[i]["content"])
+            matrices[i]["content"] = notation.simplify_single_matrix(matrices[i]["content"])
         return matrices
     
     def simplify_values_state_vector(state_vector):
@@ -264,7 +146,7 @@ class Notation:
         for i in range(0, len(matrices)):
 
             vector = np.dot(matrices[i]["content"], vector)
-            matrix_vector_state_json.append({"content": Notation.simplify_values_state_vector(vector.tolist()), "type": "GATE","key": i+1})
+            matrix_vector_state_json.append({"content": notation.simplify_values_state_vector(vector.tolist()), "type": "GATE","key": i+1})
 
         return matrix_vector_state_json
     
@@ -297,12 +179,12 @@ class Notation:
                 else:
                     if len(grouped_gates[i][j].qubits) > 1 and not little_endian:
                         incomplete_gate = not incomplete_gate
-                        if Notation.is_non_neighbouring_gate(grouped_gates[i][j]) and little_endian:
-                            matrices.append(Notation.simplify_single_matrix(Operator(get_non_neighbouring_LE_matrix(grouped_gates[i][j])).data.tolist()).copy())
+                        if notation.is_non_neighbouring_gate(grouped_gates[i][j]) and little_endian:
+                            matrices.append(notation.simplify_single_matrix(Operator(get_non_neighbouring_LE_matrix(grouped_gates[i][j])).data.tolist()).copy())
                         elif not little_endian:
-                            matrices.append(Notation.simplify_single_matrix(Operator(Notation.get_matrix_for_multi_qubit_big_endian(grouped_gates[i][j])).data.tolist()).copy())
+                            matrices.append(notation.simplify_single_matrix(Operator(notation.get_matrix_for_multi_qubit_big_endian(grouped_gates[i][j])).data.tolist()).copy())
                     else:
-                        matrices.append(Notation.simplify_single_matrix(Operator(grouped_gates[i][j].operation).data.tolist()).copy())
+                        matrices.append(notation.simplify_single_matrix(Operator(grouped_gates[i][j].operation).data.tolist()).copy())
 
             matrix_gate_json_list.append({"content": matrices, "type": "GATE","key": i+1})
         return matrix_gate_json_list
@@ -354,21 +236,21 @@ class Notation:
                 elif len(matrix) == 0:
                     if gate_incomplete:
                         gate_incomplete = False
-                    elif Notation.is_non_neighbouring_gate(grouped_gates[i][j]):
+                    elif notation.is_non_neighbouring_gate(grouped_gates[i][j]):
                         gate_incomplete = True
 
                     # if little endian, apply as normal
                     if little_endian:
 
                         # if single qubit gate, apply as normal
-                        matrix = get_non_neighbouring_LE_matrix(grouped_gates[i][j]) if Notation.is_non_neighbouring_gate(grouped_gates[i][j]) else Operator(grouped_gates[i][j].operation).data
+                        matrix = get_non_neighbouring_LE_matrix(grouped_gates[i][j]) if notation.is_non_neighbouring_gate(grouped_gates[i][j]) else Operator(grouped_gates[i][j].operation).data
 
                     # if big endian, ensure that the correct matrix is being applied (for multi-qubit gates only)
                     else:
-                        new_matrix = Notation.get_matrix_for_multi_qubit_big_endian(grouped_gates[i][j])
+                        new_matrix = notation.get_matrix_for_multi_qubit_big_endian(grouped_gates[i][j])
 
                         if len(new_matrix) != 0:
-                            if Notation.is_non_neighbouring_gate(grouped_gates[i][j]):
+                            if notation.is_non_neighbouring_gate(grouped_gates[i][j]):
                                 gate_incomplete = not gate_incomplete
 
                             matrix = new_matrix
@@ -377,19 +259,19 @@ class Notation:
                         else:
                             matrix = Operator(grouped_gates[i][j].operation).data
                 elif little_endian:
-                    matrix = np.kron(matrix, get_non_neighbouring_LE_matrix(grouped_gates[i][j]) if Notation.is_non_neighbouring_gate(grouped_gates[i][j]) else Operator(grouped_gates[i][j].operation).data)
+                    matrix = np.kron(matrix, get_non_neighbouring_LE_matrix(grouped_gates[i][j]) if notation.is_non_neighbouring_gate(grouped_gates[i][j]) else Operator(grouped_gates[i][j].operation).data)
                 else:
                     if gate_incomplete:
                         gate_incomplete = False
-                    elif Notation.is_non_neighbouring_gate(grouped_gates[i][j]):
+                    elif notation.is_non_neighbouring_gate(grouped_gates[i][j]):
                         gate_incomplete = True
                     if little_endian:
-                        matrix = np.kron(matrix, get_non_neighbouring_LE_matrix(grouped_gates[i][j]) if Notation.is_non_neighbouring_gate(grouped_gates[i][j]) else Operator(grouped_gates[i][j].operation).data)
+                        matrix = np.kron(matrix, get_non_neighbouring_LE_matrix(grouped_gates[i][j]) if notation.is_non_neighbouring_gate(grouped_gates[i][j]) else Operator(grouped_gates[i][j].operation).data)
                     else:
-                        new_matrix = Notation.get_matrix_for_multi_qubit_big_endian(grouped_gates[i][j])
+                        new_matrix = notation.get_matrix_for_multi_qubit_big_endian(grouped_gates[i][j])
 
                         if new_matrix != []:
-                            if Notation.is_non_neighbouring_gate(grouped_gates[i][j]):
+                            if notation.is_non_neighbouring_gate(grouped_gates[i][j]):
                                 gate_incomplete = not gate_incomplete
 
                             matrix = np.kron(matrix, new_matrix)
@@ -415,35 +297,3 @@ class Notation:
             dirac_state_json.append({"content": values, "type": "STATE", "key": i})
 
         return dirac_state_json
-    
-    #TODO optimize more
-    def group_gates(num_qubits, circuit, little_endian=False):
-        gates = circuit.data
-
-        columns = [[[] for i in range(0, num_qubits)]]
-        column_pointer = 0
-
-        while len(gates) > 0:
-            gate = gates.pop(0)
-            gate_indices = Notation.get_list_of_qubit_indices_in_gate(gate)
-            available = True
-
-            for i in range(0, len(gate_indices)):
-                if columns[column_pointer][gate_indices[i]] != []:
-                    available = False
-            if not available:
-                column_pointer = column_pointer + 1
-                if column_pointer >= len(columns):
-                    columns.append([[] for j in range(0, num_qubits)])
-
-            for i in range(0, len(gate_indices)):
-                if i == 0:
-                    columns[column_pointer][gate_indices[i]] = gate
-                else:
-                    columns[column_pointer][gate_indices[i]] = "MARKED"
-
-        if little_endian:
-            for i in range(0, len(columns)):
-                columns[i].reverse()
-
-        return columns
