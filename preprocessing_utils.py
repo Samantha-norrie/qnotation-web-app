@@ -3,11 +3,12 @@ from qiskit.quantum_info.operators import Operator
 from qiskit.circuit import CircuitInstruction, Instruction, Qubit
 from errors import InvalidGateError, InputError
 import subprocess
+import copy
 import sys
 import os
 import tempfile
 from utils import * 
-from notation import notation
+from notation import get_list_of_qubit_indices_in_gate
 
 # TODO Remove once gate id issue stemming from temp file is resolved
 def apply_gate_to_circuit(qc, gate):
@@ -19,7 +20,8 @@ def apply_gate_to_circuit(qc, gate):
         gate (CircuitInstruction): Gate that will be applied to qc
 
     """
-
+    print("Qubit",gate.qubits[0])
+    print("Gate", gate)
     match gate.operation.name:
         case "cp":
             qc.cp(gate.operation.params[0], gate.qubits[0].index, gate.qubits[1].index)       
@@ -94,6 +96,41 @@ def apply_gate_to_circuit(qc, gate):
             
     return qc
 
+def get_control_and_target_qubit_indices(gate):
+    """
+    Gets control and target qubits of a quantum gate
+
+    Args:
+        gate (CircuitInstruction): the gate to be checked
+
+    Returns:
+        list[int], list[int]: a sorted list of control qubit indices, a sorted list of target qubit indices
+
+    """   
+    control_qubit_indices = []
+    target_qubit_indices = []
+    
+    gate_name = gate.operation.name
+    gate_qubit_info = gate.qubits
+    if gate_name in CONTROL_TARGET_GATE_NAMES:
+        control_qubit_indices.append(gate_qubit_info[0].index)
+        target_qubit_indices.append(gate_qubit_info[1].index)
+    elif gate_name in CONTROL_CONTROL_TARGET_GATE_NAMES:
+        control_qubit_indices.append(gate_qubit_info[0].index)
+        control_qubit_indices.append(gate_qubit_info[1].index)
+        target_qubit_indices.append(gate_qubit_info[2].index)
+    else:
+        control_qubit_indices.append(gate_qubit_info[0].index)
+        control_qubit_indices.append(gate_qubit_info[1].index)
+        control_qubit_indices.append(gate_qubit_info[2].index)
+        target_qubit_indices.append(gate_qubit_info[3].index)
+
+    control_qubit_indices.sort()
+    target_qubit_indices.sort()
+
+    return control_qubit_indices, target_qubit_indices
+
+
 def process_circuit_received(code_string):
     """
     Takes Qiskit code received from frontend, runs it in a temp file, and turns it into a QuantumCircuit
@@ -142,25 +179,19 @@ def process_circuit_received(code_string):
         os.remove(temp_file_name)
 
     # Create QuantumCircuit to return
-    print("about to make circuit")
-    print(num_qubits, "used")
     qc = QuantumCircuit(num_qubits)
-    print("after making circuit")
     for i in range(0, len(gates)):
         apply_gate_to_circuit(qc, gates[i])
 
-    print(qc)
-
     return qc
 
-def group_gates(num_qubits, qc, little_endian=False):
+def group_gates(num_qubits, qc):
     """
     Groups gates of quantum circuit into sub arrays. These arrays are used for column visualizations and state calculations.
 
     Args:
         num_qubits (int): the number of qubits in the circuit
         qc (QuantumCircuit): the quantum circuit being operated on
-        little_endian (boolean): whether gates should be grouped for little endian calculations or not
 
     Returns:
         list[object]: the sorted gates and descriptors explaining multi-Qubit gate behaviour
@@ -170,39 +201,75 @@ def group_gates(num_qubits, qc, little_endian=False):
     """
     gates = qc.data
 
-    columns = [[[] for i in range(0, num_qubits)]]
+    column = [NOT_INVOLVED for i in range(0, num_qubits)]
+    grouped_gates_be = [copy.deepcopy(column)]
     column_pointer = 0
 
 
     # Iterate through all gates
     while len(gates) > 0:
         gate = gates.pop(0)
-        gate_indices = notation.get_list_of_qubit_indices_in_gate(gate)
+        gate_indices = get_list_of_qubit_indices_in_gate(gate)
         available = True
 
         # Go through all qubits used in gate
         for i in range(0, len(gate_indices)):
 
             # If a qubit in the current gate column already is being used for a gate, flag availability as false
-            if columns[column_pointer][gate_indices[i]] != []:
+            if grouped_gates_be[column_pointer][gate_indices[i]] != NOT_INVOLVED:
                 available = False
         
         # Move to the next column if space is not available in current column
         if not available:
             column_pointer = column_pointer + 1
-            #if column_pointer >= len(columns):
-            columns.append([[] for j in range(0, num_qubits)])
+            grouped_gates_be.append(copy.deepcopy(column))
 
         # Place gate in column
-        for i in range(0, len(gate_indices)):
-            if i == 0:
-                columns[column_pointer][gate_indices[i]] = gate
-            else:
-                columns[column_pointer][gate_indices[i]] = "MARKED"
 
-    # If little_endian flag, flip all columns
-    if little_endian:
-        for i in range(0, len(columns)):
-            columns[i].reverse()
+        # If single-qubit gate, place CircuitInstruction
+        if len(gate_indices) == 1:
+            grouped_gates_be[column_pointer][gate_indices[0]]= gate
 
-    return columns
+        # if multi-qubit gate, place control and target qubits
+        else:
+            control_qubit_indices, target_qubit_indices = get_control_and_target_qubit_indices(gate)
+
+            # Place control qubits
+            for j in range(0, len(control_qubit_indices)):
+
+                # Place CircuitInstruction at first control index
+                if j == 0:
+                    grouped_gates_be[column_pointer][control_qubit_indices[j]] = gate
+                else:
+                    grouped_gates_be[column_pointer][control_qubit_indices[j]] = CONTROL
+
+            # Place target qubits
+            for j in range(0, len(target_qubit_indices)):
+                grouped_gates_be[column_pointer][target_qubit_indices[j]] = TARGET
+
+
+            # Mark auxiliary qubits
+            min_control = min(control_qubit_indices)
+            min_target = min(target_qubit_indices)
+            min_index = min_target if min_target < min_control else min_control
+
+            max_control = max(control_qubit_indices)
+            max_target = max(target_qubit_indices)
+            max_index = max_target if max_target > max_control else max_control
+            
+            start_of_gate_found = False
+            for j in range(min_index, max_index):
+                if not start_of_gate_found and grouped_gates_be[column_pointer][j] != NOT_INVOLVED:
+                    start_of_gate_found = True
+                elif start_of_gate_found:
+                    if grouped_gates_be[column_pointer][j] == NOT_INVOLVED:
+                        grouped_gates_be[column_pointer][j] = AUXILIARY
+                    else:
+                        break
+
+    # Create grouped gates for little endian formatting
+    grouped_gates_le = copy.deepcopy(grouped_gates_be)
+    for i in range(0, len(grouped_gates_le)):
+        grouped_gates_le[i].reverse()
+
+    return grouped_gates_be, grouped_gates_le

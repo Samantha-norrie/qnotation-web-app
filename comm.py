@@ -1,9 +1,10 @@
 from flask import Flask, jsonify, request, send_from_directory
-from Notation import Notation
+from notation import *
 from flask_cors import CORS
 from qiskit import *
-from Utils import MESSAGE_TOO_MANY_QUBITS_ERROR, MESSAGE_TOO_MANY_QUBITS_FOR_TENSOR_ERROR, MESSAGE_INVALID_GATE_ERROR, MESSAGE_INPUT_ERROR, MESSAGE_UNKNOWN_ERROR
-from Errors import TooManyQubitsError, TooManyQubitsForTensorError, InvalidGateError, InputError
+from preprocessing_utils import process_circuit_received, group_gates
+from utils import MESSAGE_TOO_MANY_QUBITS_ERROR, MESSAGE_TOO_MANY_QUBITS_FOR_TENSOR_ERROR, MESSAGE_INVALID_GATE_ERROR, MESSAGE_INPUT_ERROR, MESSAGE_UNKNOWN_ERROR
+from errors import TooManyQubitsError, TooManyQubitsForTensorError, InvalidGateError, InputError
 
 import os
 
@@ -22,15 +23,19 @@ def serve(path):
 
 @app.post("/get_notation_data")
 def get_notation_data():
-    data = request.form.to_dict()
-
-    qc_string = data.get('data[qc]')
-    matrix_gates_le = None
-    matrix_gates_be = None
+    print("in")
+    print("REQUEST", request.json)
+    print("REQUEST dict", request.form.to_dict())
+    data = request.json
+    print(data)
+    qc_string = data.get('qc')
+    print(qc_string)
+    matrix_gate_json_little_endian = None
+    matrix_gate_json_big_endian = None
     matrix_gates_tensor_product_le = None
     matrix_gates_tensor_product_be = None
-    matrix_state_vector_le = None
-    matrix_state_vector_be = None
+    matrix_state_vector_little_endian = None
+    matrix_state_vector_big_endian = None
     circuit_dirac_gate_le = None
     circuit_dirac_gate_be = None
     dirac_state_vector_le = None
@@ -39,45 +44,55 @@ def get_notation_data():
     message = ""
     status = 200
 
-    little_endian = True
-    
+    #qc_string = "from qiskit import *\nimport numpy as np\nqc = QuantumCircuit(3)\n\n# Insert code below\nqc.h(0)"
+    # qc_string = "from qiskit import *\nimport numpy as np\nqc = QuantumCircuit(3)\n\n# Insert code below\nqc.x(0)\nqc.h(2)" 
+    # qc_string = "from qiskit import *\nimport numpy as np\nqc = QuantumCircuit(3)\n\n# Insert code below\nqc.cx(2,0)\nqc.h(2)" 
+    # qc_string = "from qiskit import *\nimport numpy as np\nqc = QuantumCircuit(2)\n\n# Insert code below\nqc.h(0)\nqc.h(1)" 
     try:
-        circuit_details = Notation.process_circuit_received(qc_string)
 
-        qc = Notation.convert_input_gates(circuit_details[0], circuit_details[1]) #.reverse_bits()
-
+        # 1.0. Transform Qiskit code received into a QuantumCircuit
+        qc = process_circuit_received(qc_string)
         num_qubits = qc.num_qubits
-        if num_qubits > 5 : 
+
+
+        if num_qubits > MAX_NUM_QUBITS_FOR_APP : 
             raise TooManyQubitsError
+        
+        # 2.0. Group gates into operations. These operations will be referred to as 'columns' to match frontend visualizations
+        grouped_gates_big_endian, grouped_gates_little_endian = group_gates(num_qubits, qc.copy())
 
-        grouped_gates_le = Notation.group_gates(num_qubits, qc.copy(), little_endian)
-        grouped_gates_be = Notation.group_gates(num_qubits, qc)
-        # print("grouped gates le", grouped_gates_le)
-        # print("grouped gates be", grouped_gates_be)
+        # 3.0. Create data for equation and state parts of matrix component
 
-        matrix_gates_le = Notation.create_matrix_gate_json(num_qubits, grouped_gates_le, little_endian)
-        matrix_gates_be = Notation.create_matrix_gate_json(num_qubits, grouped_gates_be)
+        # 3.1. Compute matrices for each column
+        matrix_gate_json_big_endian = create_matrix_gate_json(num_qubits, grouped_gates_big_endian)
+        matrix_gate_json_little_endian = create_matrix_gate_json(num_qubits, grouped_gates_little_endian, True)
 
-        matrix_state_vector_le = Notation.create_matrix_state_vector_json(num_qubits, matrix_gates_le)
-        matrix_state_vector_be = Notation.create_matrix_state_vector_json(num_qubits, matrix_gates_be)
+        # 3.2. Create tensor product lists for each column if appropriate
+        if num_qubits <= MAX_NUM_QUBITS_FOR_TENSOR:
+            matrix_gates_tensor_product_le = create_tensor_product_matrix_gate_json(num_qubits, grouped_gates_little_endian, True)
+            matrix_gates_tensor_product_le.insert(0, matrix_state_vector_little_endian[0])
 
-        matrix_gates_le = Notation.simplify_values_matrix(matrix_gates_le)
-        matrix_gates_be = Notation.simplify_values_matrix(matrix_gates_be)
+            matrix_gates_tensor_product_be = create_tensor_product_matrix_gate_json(num_qubits, grouped_gates_big_endian)
+            matrix_gates_tensor_product_be.insert(0, matrix_state_vector_big_endian[0])
 
-        dirac_state_vector_le = Notation.format_matrix_state_vectors_for_dirac_state(num_qubits, matrix_state_vector_le)
-        dirac_state_vector_be = Notation.format_matrix_state_vectors_for_dirac_state(num_qubits, matrix_state_vector_be)
-        if num_qubits <= 3:
-            matrix_gates_tensor_product_le = Notation.create_tensor_product_matrix_gate_json(num_qubits, grouped_gates_le, True)
-            matrix_gates_tensor_product_le.insert(0, matrix_state_vector_le[0])
+        # 3.3. Compute state vectors
+        matrix_state_vector_little_endian = create_matrix_state_vector_json(num_qubits, matrix_gate_json_little_endian)
+        matrix_state_vector_big_endian = create_matrix_state_vector_json(num_qubits, matrix_gate_json_big_endian)
 
-            matrix_gates_tensor_product_be = Notation.create_tensor_product_matrix_gate_json(num_qubits, grouped_gates_be)
-            matrix_gates_tensor_product_be.insert(0, matrix_state_vector_be[0])
+        # 3.4. Simplify matrices for frontend display
+        matrix_gate_json_little_endian = simplify_matrices_json(matrix_gate_json_little_endian)
+        matrix_gate_json_big_endian = simplify_matrices_json(matrix_gate_json_big_endian)
 
-        matrix_gates_le.insert(0, matrix_state_vector_le[0])
-        matrix_gates_be.insert(0, matrix_state_vector_be[0])
+        matrix_gate_json_little_endian.insert(0, matrix_state_vector_little_endian[0])
+        matrix_gate_json_big_endian.insert(0, matrix_state_vector_big_endian[0])
 
-        circuit_dirac_gate_le= Notation.create_circuit_dirac_gates_json(num_qubits, grouped_gates_le)
-        circuit_dirac_gate_be= Notation.create_circuit_dirac_gates_json(num_qubits, grouped_gates_be)
+        # 4.0. Create data for equation and state parts of circuit and Dirac components
+        circuit_dirac_gate_le = create_circuit_dirac_gates_json(num_qubits, grouped_gates_little_endian)
+        circuit_dirac_gate_be = create_circuit_dirac_gates_json(num_qubits, grouped_gates_big_endian)
+
+        dirac_state_vector_le = format_matrix_state_vectors_for_dirac_state_json(num_qubits, matrix_state_vector_little_endian)
+        dirac_state_vector_be = format_matrix_state_vectors_for_dirac_state_json(num_qubits, matrix_state_vector_big_endian)
+
     except TooManyQubitsError:
         message = MESSAGE_TOO_MANY_QUBITS_ERROR
         status = 500
@@ -96,12 +111,12 @@ def get_notation_data():
     #     status = 520
 
 
-    return jsonify({'matrix_gates_le': matrix_gates_le,
-                    'matrix_gates_be': matrix_gates_be,
+    return jsonify({'matrix_gates_le': matrix_gate_json_little_endian,
+                    'matrix_gates_be': matrix_gate_json_big_endian,
                     'matrix_gates_tensor_product_le': matrix_gates_tensor_product_le,
                     'matrix_gates_tensor_product_be': matrix_gates_tensor_product_be,
-                    'matrix_state_vector_le': matrix_state_vector_le,
-                    'matrix_state_vector_be': matrix_state_vector_be,
+                    'matrix_state_vector_le': matrix_state_vector_little_endian,
+                    'matrix_state_vector_be': matrix_state_vector_big_endian,
                     'circuit_dirac_gate_le': circuit_dirac_gate_le,
                     'circuit_dirac_gate_be': circuit_dirac_gate_be,
                     'dirac_state_vector_le': dirac_state_vector_le,
@@ -113,3 +128,4 @@ def get_notation_data():
 
 if __name__ == "__main__":
     app.run(port=8001, debug=True)
+    #get_notation_data()
