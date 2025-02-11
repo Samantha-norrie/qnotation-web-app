@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request, send_from_directory
 from notation import *
 from flask_cors import CORS
 from qiskit import *
-from preprocessing_utils import process_circuit_received, group_gates
+from preprocessing_utils import process_circuit_received, group_gates, create_gate_information_list_for_gates
 from utils import MESSAGE_TOO_MANY_QUBITS_ERROR, MESSAGE_TOO_MANY_QUBITS_FOR_TENSOR_ERROR, MESSAGE_INVALID_GATE_ERROR, MESSAGE_INPUT_ERROR, MESSAGE_UNKNOWN_ERROR
 from errors import TooManyQubitsError, TooManyQubitsForTensorError, InvalidGateError, InputError
 
@@ -23,13 +23,10 @@ def serve(path):
 
 @app.post("/get_notation_data")
 def get_notation_data():
-    print("in")
-    print("REQUEST", request.json)
-    print("REQUEST dict", request.form.to_dict())
+
     data = request.json
-    print(data)
     qc_string = data.get('qc')
-    print(qc_string)
+
     matrix_gate_json_little_endian = None
     matrix_gate_json_big_endian = None
     matrix_gates_tensor_product_le = None
@@ -44,30 +41,29 @@ def get_notation_data():
     message = ""
     status = 200
 
-    #qc_string = "from qiskit import *\nimport numpy as np\nqc = QuantumCircuit(3)\n\n# Insert code below\nqc.h(0)"
-    # qc_string = "from qiskit import *\nimport numpy as np\nqc = QuantumCircuit(3)\n\n# Insert code below\nqc.x(0)\nqc.h(2)" 
-    # qc_string = "from qiskit import *\nimport numpy as np\nqc = QuantumCircuit(3)\n\n# Insert code below\nqc.cx(2,0)\nqc.h(2)" 
-    # qc_string = "from qiskit import *\nimport numpy as np\nqc = QuantumCircuit(2)\n\n# Insert code below\nqc.h(0)\nqc.h(1)" 
     try:
 
         # 1.0. Transform Qiskit code received into a QuantumCircuit
         qc = process_circuit_received(qc_string)
         num_qubits = qc.num_qubits
-
-
-        if num_qubits > MAX_NUM_QUBITS_FOR_APP : 
-            raise TooManyQubitsError
         
-        # 2.0. Group gates into operations. These operations will be referred to as 'columns' to match frontend visualizations
-        grouped_gates_big_endian, grouped_gates_little_endian = group_gates(num_qubits, qc.copy())
+        # 2.0. Transform quantum circuit into GateInformation objects
+        gates_and_indices = create_gate_information_list_for_gates(qc)
+        
+        # 3.0. Group gates into operations. These operations will be referred to as 'columns' to match frontend visualizations
+        grouped_gates_big_endian, grouped_gates_little_endian = group_gates(num_qubits, gates_and_indices.copy())
 
-        # 3.0. Create data for equation and state parts of matrix component
+        # 4.0. Create data for equation and state parts of matrix component
 
-        # 3.1. Compute matrices for each column
+        # 4.1. Compute matrices for each column
         matrix_gate_json_big_endian = create_matrix_gate_json(num_qubits, grouped_gates_big_endian)
         matrix_gate_json_little_endian = create_matrix_gate_json(num_qubits, grouped_gates_little_endian, True)
 
-        # 3.2. Create tensor product lists for each column if appropriate
+        # 4.2. Compute state vectors
+        matrix_state_vector_little_endian = create_matrix_state_vector_json(num_qubits, matrix_gate_json_little_endian)
+        matrix_state_vector_big_endian = create_matrix_state_vector_json(num_qubits, matrix_gate_json_big_endian)
+
+        # 4.3. Create tensor product lists for each column if appropriate
         if num_qubits <= MAX_NUM_QUBITS_FOR_TENSOR:
             matrix_gates_tensor_product_le = create_tensor_product_matrix_gate_json(num_qubits, grouped_gates_little_endian, True)
             matrix_gates_tensor_product_le.insert(0, matrix_state_vector_little_endian[0])
@@ -75,18 +71,14 @@ def get_notation_data():
             matrix_gates_tensor_product_be = create_tensor_product_matrix_gate_json(num_qubits, grouped_gates_big_endian)
             matrix_gates_tensor_product_be.insert(0, matrix_state_vector_big_endian[0])
 
-        # 3.3. Compute state vectors
-        matrix_state_vector_little_endian = create_matrix_state_vector_json(num_qubits, matrix_gate_json_little_endian)
-        matrix_state_vector_big_endian = create_matrix_state_vector_json(num_qubits, matrix_gate_json_big_endian)
-
-        # 3.4. Simplify matrices for frontend display
+        # 4.4. Simplify matrices for frontend display
         matrix_gate_json_little_endian = simplify_matrices_json(matrix_gate_json_little_endian)
         matrix_gate_json_big_endian = simplify_matrices_json(matrix_gate_json_big_endian)
 
         matrix_gate_json_little_endian.insert(0, matrix_state_vector_little_endian[0])
         matrix_gate_json_big_endian.insert(0, matrix_state_vector_big_endian[0])
 
-        # 4.0. Create data for equation and state parts of circuit and Dirac components
+        # 5.0. Create data for equation and state parts of circuit and Dirac components
         circuit_dirac_gate_le = create_circuit_dirac_gates_json(num_qubits, grouped_gates_little_endian)
         circuit_dirac_gate_be = create_circuit_dirac_gates_json(num_qubits, grouped_gates_big_endian)
 
@@ -95,21 +87,23 @@ def get_notation_data():
 
     except TooManyQubitsError:
         message = MESSAGE_TOO_MANY_QUBITS_ERROR
-        status = 500
+        status = 400
     except TooManyQubitsForTensorError:
         message = MESSAGE_TOO_MANY_QUBITS_FOR_TENSOR_ERROR
-        status = 500
+        status = 400
     except InvalidGateError:
         message = MESSAGE_INVALID_GATE_ERROR
-        status = 500
+        status = 400
+    except GateNotImplementedError:
+        message = MESSAGE_GATE_NOT_SUPPORTED_ERROR
+        status = 400       
     except InputError:
         message = MESSAGE_INPUT_ERROR
+        status = 400
+    except Exception as e:
+        print("ERROR ", e)
+        message = MESSAGE_UNKNOWN_ERROR
         status = 500
-    # except Exception as e:
-    #     print("ERROR ", e)
-    #     message = MESSAGE_UNKNOWN_ERROR
-    #     status = 520
-
 
     return jsonify({'matrix_gates_le': matrix_gate_json_little_endian,
                     'matrix_gates_be': matrix_gate_json_big_endian,
@@ -125,7 +119,5 @@ def get_notation_data():
                     'message': message,
         'status': status})
 
-
 if __name__ == "__main__":
     app.run(port=8001, debug=True)
-    #get_notation_data()

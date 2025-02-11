@@ -1,7 +1,12 @@
+from qiskit.circuit.library import *
+from errors import GateNotImplementedError
 from qiskit.quantum_info.operators import Operator
+from gate_information import GateInformation
+from enum import Enum
 import numpy as np
 import math
 import cmath
+import copy
 
 CONTROL = "CONTROL"
 TARGET = "TARGET"
@@ -19,7 +24,68 @@ MESSAGE_INPUT_ERROR = "Invalid input given."
 MESSAGE_TOO_MANY_QUBITS_ERROR = "Too many qubits used. Please use 5 qubits or less."
 MESSAGE_TOO_MANY_QUBITS_FOR_TENSOR_ERROR = "Too many qubits used for tensor setting. Please use 3 qubits or less."
 MESSAGE_INVALID_GATE_ERROR = "Invalid gate(s) used."
+MESSAGE_GATE_NOT_SUPPORTED_ERROR = "Gate(s) not supported."
 MESSAGE_UNKNOWN_ERROR = "UNKNOWN ERROR"
+class GateNames(Enum):
+    CONTROLLED_THREE_QUBIT_SQUARED_X = "c3sx"
+    CONTROLLED_THREE_QUBIT_X = "c3x"
+    CONTROLLED_FOUR_QUBIT_X = "c4x"
+    CONTROLLED_CONTROLLED_X = "ccx"
+    CONTROLLED_CONTROLLED_Z = "ccz"
+    CONTROLLED_HADAMARD = "ch"
+    CONTROLLED_PHASE = "cp"
+    CONTROLLED_ROTAIONAL_X = "crx"
+    CONTROLLED_ROTAIONAL_Y = "cry"
+    CONTROLLED_ROTAIONAL_Z = "crz"
+    CONTROLLED_S_DAGGER = "csdg"
+    CONTROLLED_S = "cs"
+    CONTROLLED_SWAP = "cswap"
+    CONTROLLED_SQUARED_X = "csx"
+    CONTROLLED_U = "cu"
+    CONTROLLED_X = "cx"
+    CONTROLLED_Y = "cy"
+    CONTROLLED_Z = "cz"
+    DOUBLE_CONTROLLED_X = "dcx"
+    DIAGONAL = "d"
+    GLOBAL_PHASE = "gp"
+    HADAMARD = "h"
+    IDENTITY = "i"
+    MULTI_CONTROLLED_MULTI_TARGET = "mcmt"
+    MULTI_CONTROLLED_PHASE = "mcp"
+    MULTI_CONTROLLED_X = "mcx"
+    PERMUTATION = "permutation"
+    PHASE = "p"
+    QUANTUM_FOURIER_TRANSFORM = "qft"
+    RELATIVE_PHASE_CONTROLLED_X = "rc3x"
+    RELATIVE_PHASE_CONTROLLED_CONTROLLED_X = "rccx"
+    ROTATIONAL = "r"
+    ROTATIONAL_V = "rv"
+    ROTATIONAL_X = "rx"
+    ROTATIONAL_X_X = "rxx"
+    ROTATIONAL_Y = "ry"
+    ROTATIONAL_Y_Y = "ryy"
+    ROTATIONAL_Z = "rz"
+    ROTATIONAL_Z_X = "rzx"
+    ROTATIONAL_Z_Z = "rzz"
+    S_DAGGER = "sdg"
+    S = "s"
+    SWAP = "swap"
+    SQUARED_X_DAGGER = "sxdg"
+    SQUARED_X = "sx"
+    T_ADJOINT = "tdg"
+    T = "t"
+    U = "u"
+    UNIFORMLY_CONTROLLED = "uc"
+    UNIFORMLY_CONTROLLED_PAULI_ROTATIONAL = "ucpr"
+    UNIFORMLY_CONTROLLED_ROTATIONAL_X = "ucrx"
+    UNIFORMLY_CONTROLLED_ROTATIONAL_Y = "ucry"
+    UNIFORMLY_CONTROLLED_ROTATIONAL_Z = "ucrz"
+    UNITARY = "unitary"
+    X = "x"
+    X_X_MINUS_Y_Y = "xxminusyy"
+    X_X_PLUS_Y_Y = "xxplusyy"
+    Y = "y"
+    Z = "z"
 
 CONTROL_TARGET_GATE_NAMES = [ "ch", "cp", "crx", "cry", "crz","cs","csdg", "csx","cswap","cx", "cy", "cz", 
                             "csx", "cu", "mcp", "mcx"]
@@ -31,39 +97,142 @@ IDENTITY_MATRIX = np.array([[1, 0], [0, 1]])
 MAX_NUM_QUBITS_FOR_APP = 5
 MAX_NUM_QUBITS_FOR_TENSOR = 3
 
-def get_list_of_qubit_indices_in_gate(gate):
-    """
-    Gives list of qubits involved in given gate
-
-    Args:
-        gate (CircuitInstruction): the gate to be checked
-
-    Returns:
-        list[int]: list of qubit indices
-    """
-    index_list = []
-    for i in range(0, len(gate.qubits)):
-        index_list.append(gate.qubits[i].index)
-
-    return index_list
+def get_gate_object_from_gate_name(gate_name, params=[]):
+    print("in obj function")
+    match gate_name:
+        case GateNames.CONTROLLED_THREE_QUBIT_SQUARED_X.value:
+            return C3SXGate()
+        case GateNames.CONTROLLED_THREE_QUBIT_X.value:
+            return C3XGate()
+        case GateNames.CONTROLLED_FOUR_QUBIT_X.value:
+            return C4XGate()
+        case GateNames.CONTROLLED_CONTROLLED_X.value:
+            return CCXGate()
+        case GateNames.CONTROLLED_CONTROLLED_Z.value:
+            return CCZGate()
+        case GateNames.CONTROLLED_PHASE.value:
+            return CPhaseGate(params[0])
+        case GateNames.CONTROLLED_ROTAIONAL_X.value:
+            return CRXGate(params[0])
+        case GateNames.CONTROLLED_ROTAIONAL_Y.value:
+            return CRYGate(params[0])
+        case GateNames.CONTROLLED_ROTAIONAL_Z.value:
+            return CRZGate(params[0])
+        case GateNames.CONTROLLED_S_DAGGER.value:
+            return CSdgGate()
+        case GateNames.CONTROLLED_S.value:
+            return CSGate()
+        case GateNames.CONTROLLED_SQUARED_X:
+            return CSXGate()
+        case GateNames.CONTROLLED_U.value:
+            return CUGate(params[0], params[1], params[2], params[3])
+        case GateNames.CONTROLLED_X.value:
+            print("hit cx")
+            return CXGate()
+        case GateNames.CONTROLLED_Y.value:
+            return CYGate()
+        case GateNames.CONTROLLED_Z.value:
+            return CZGate()
+        case GateNames.DOUBLE_CONTROLLED_X.value:
+            return DCXGate()
+        case GateNames.DIAGONAL.value:
+            return DiagonalGate(params[0])
+        case GateNames.GLOBAL_PHASE.value:
+            return GlobalPhaseGate(params[0])
+        case GateNames.HADAMARD.value:
+            return HGate()
+        case GateNames.IDENTITY.value:
+            return IGate()
+        case GateNames.MULTI_CONTROLLED_MULTI_TARGET.value:
+            return MCMTGate()
+        case GateNames.MULTI_CONTROLLED_PHASE.value:
+            return MCPhaseGate()
+        case GateNames.MULTI_CONTROLLED_X.value:
+            return MCXGate()
+        case GateNames.PERMUTATION.value:
+            return PermutationGate(params[0])
+        case GateNames.PHASE.value:
+            return PhaseGate(params[0])
+        case GateNames.QUANTUM_FOURIER_TRANSFORM.value:
+            return QFTGate()
+        case GateNames.RELATIVE_PHASE_CONTROLLED_CONTROLLED_X.value:
+            return RCCXGate()
+        case GateNames.RELATIVE_PHASE_CONTROLLED_X.value:
+            return RC3XGate()
+        case GateNames.ROTATIONAL.value:
+            return RGate(params[0], params[1])
+        case GateNames.ROTATIONAL_V.value:
+            return RVGate(params[0], params[1], params[2])
+        case GateNames.ROTATIONAL_X.value:
+            return RXGate(params[0])
+        case GateNames.ROTATIONAL_X_X.value:
+            return RXXGate(params[0])
+        case GateNames.ROTATIONAL_Y.value:
+            return RYGate(params[0])
+        case GateNames.ROTATIONAL_Y_Y.value:
+            return RYYGate(params[0])
+        case GateNames.ROTATIONAL_Z.value:
+            return RZGate(params[0])
+        case GateNames.ROTATIONAL_Z_X.value:
+            return RZXGate(params[0])
+        case GateNames.ROTATIONAL_Z_Z.value:
+            return RZZGate(params[0])
+        case GateNames.S.value:
+            return SGate()
+        case GateNames.S_DAGGER.value:
+            return SdgGate()
+        case GateNames.SWAP.value:
+            return SwapGate()
+        case GateNames.T.value:
+            return TGate()
+        case GateNames.T_ADJOINT.value:
+            return TdgGate()
+        case GateNames.U.value:
+            return UGate(params[0], params[1], params[2])
+        case GateNames.UNIFORMLY_CONTROLLED.value:
+            return UCGate(params[0])
+        case GateNames.UNIFORMLY_CONTROLLED_PAULI_ROTATIONAL.value:
+            return UCPauliRotGate(params[0], params[1])
+        case GateNames.UNIFORMLY_CONTROLLED_ROTATIONAL_X.value:
+            return UCRXGate(params[0])
+        case GateNames.UNIFORMLY_CONTROLLED_ROTATIONAL_Y.value:
+            return UCRYGate(params[0])
+        case GateNames.UNIFORMLY_CONTROLLED_ROTATIONAL_Z.value:
+            return UCRZGate(params[0])
+        case GateNames.UNIFORMLY_CONTROLLED_ROTATIONAL_Z.value:
+            return UnitaryGate()
+        case GateNames.X.value:
+            return XGate()
+        case GateNames.X_X_MINUS_Y_Y.value:
+            return XXMinusYYGate(params[0], params[1])
+        case GateNames.X_X_PLUS_Y_Y.value:
+            return XXPlusYYGate(params[0], params[1])
+        case GateNames.Y.value:
+            return YGate()
+        case GateNames.Z.value:
+            return ZGate()
+        case _:
+            raise GateNotImplementedError
 
 def is_non_neighbouring_gate(gate):
     """
     Checks if given gate has non-neighbouring qubits
 
     Args:
-        gate (CircuitInstruction): the gate to be checked
+        gate (GateInformation): the gate to be checked
 
     Returns:
         boolean: True if the given gate contains non-neighbouring qubits
     """
-    num_qubits = len(gate.qubits)
-    if num_qubits > 1:
+    
+    
+    if gate.get_num_qubits() > 1:
 
-        indices = get_list_of_qubit_indices_in_gate(gate).sort()
+        sorted_indices = copy.deepcopy(gate.get_control_qubit_indices() + gate.get_target_qubit_indices())
+        sorted_indices.sort()
 
-        for i in range(1, len(indices)):
-            if indices[i] - indices[i-1] > 1:
+        for i in range(1, len(sorted_indices)):
+            if sorted_indices[i] - sorted_indices[i-1] > 1:
                 return True
                
     return False
@@ -207,22 +376,23 @@ def get_crz(theta, num_gap_qubits = 0):
                 [0.+0.j, 0.+0.j, cmath.exp(-1j * theta / 2), 0+0.j],
                 [0.+0.j, 0+0.j, 0+0.j, cmath.exp(-1j * theta / 2)]])
 
-def get_non_neighbouring_matrix_little_endian(gate):
-    name = gate.operation.name
+# TODO update for bigger gaps
+def get_non_neighbouring_matrix_little_endian(gate: GateInformation):
+    name = gate.get_name()
     match name:
         case "cp":
-            return get_cp(gate.operation.params[0], 1)
+            return get_cp(gate.get_params(), 1)
         case "crx":
-            return get_crx(gate.operation.params[0], True, 1)
+            return get_crx(gate.get_params(), True, 1)
         case "cx":
             return CX_LE_ONE_GAP
         case "cy":
             return CY_LE_ONE_GAP
         case _:
-            return []
+            raise GateNotImplementedError()
         
-def get_matrix_for_multi_qubit_big_endian(gate):
-    name = gate.operation.name
+def get_matrix_for_multi_qubit_big_endian(gate: GateInformation):
+    name = gate.get_name()
     non_neighbouring = is_non_neighbouring_gate(gate)
     match name:
         case "ch":

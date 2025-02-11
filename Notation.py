@@ -1,7 +1,8 @@
 from qiskit import *
 from qiskit.quantum_info.operators import Operator
-from qiskit.circuit import CircuitInstruction
+from qiskit.circuit import CircuitInstruction, Gate
 import numpy as np
+from gate_information import GateInformation
 from utils import * 
 
 # MATRIX
@@ -111,20 +112,22 @@ def create_tensor_product_matrix_gate_json(num_qubits, grouped_gates, little_end
     for i in range(0, len(grouped_gates)):
 
         matrices = []
-        current_qubit_in_column = grouped_gates[i][j]
 
         # Matrix calculations for column
         for j in range(0, num_qubits):
 
+            current_qubit_in_column = grouped_gates[i][j]
+
             # format and append matrices found to list
-            if type(current_qubit_in_column) == CircuitInstruction:
+            if type(current_qubit_in_column) == GateInformation:
+
                 if is_non_neighbouring_gate(current_qubit_in_column):
                     if little_endian:
                         matrices.append(simplify_single_matrix(Operator(get_non_neighbouring_matrix_little_endian(current_qubit_in_column)).data.tolist()).copy())
                     else:
-                        matrices.append(simplify_single_matrix(Operator(get_matrix_for_multi_qubit_big_endian(grouped_gates[i][j])).data.tolist()).copy())
+                        matrices.append(simplify_single_matrix(Operator(get_matrix_for_multi_qubit_big_endian(current_qubit_in_column)).data.tolist()).copy())
                 else:
-                    matrices.append(simplify_single_matrix(Operator(current_qubit_in_column.operation).data.tolist()).copy())
+                    matrices.append(simplify_single_matrix(current_qubit_in_column.get_matrix().tolist()).copy())
 
             # append identity matrix if qubit is not being used by any other gate
             elif current_qubit_in_column == NOT_INVOLVED:
@@ -157,7 +160,7 @@ def create_matrix_gate_json(num_qubits, grouped_gates, little_endian=False):
 
             current_qubit_in_column = grouped_gates[i][j]
 
-            # Continue if current qubit does not contain a CircuitInstruction
+            # Continue if current qubit does not contain a GateInformation object or is involved in a gate
             if current_qubit_in_column == AUXILIARY or current_qubit_in_column == CONTROL or current_qubit_in_column == TARGET:
                 continue
 
@@ -171,15 +174,18 @@ def create_matrix_gate_json(num_qubits, grouped_gates, little_endian=False):
 
             # If no matrix has been applied yet..
             elif len(matrix) == 0:
-
+ 
                 # little endian
                 if little_endian:
-                    matrix = get_non_neighbouring_matrix_little_endian(current_qubit_in_column) if is_non_neighbouring_gate(current_qubit_in_column) else Operator(current_qubit_in_column.operation).data
+                    matrix = get_non_neighbouring_matrix_little_endian(current_qubit_in_column) if \
+                        is_non_neighbouring_gate(current_qubit_in_column) else \
+                        current_qubit_in_column.get_matrix()
 
                 # big endian
                 else:
-                    if len(current_qubit_in_column.qubits) == 1:
-                        matrix = Operator(current_qubit_in_column.operation).data
+
+                    if current_qubit_in_column.get_num_qubits() == 1:
+                        matrix = current_qubit_in_column.get_matrix()
                     else:
                         matrix = get_matrix_for_multi_qubit_big_endian(current_qubit_in_column)
 
@@ -188,18 +194,21 @@ def create_matrix_gate_json(num_qubits, grouped_gates, little_endian=False):
 
                 # little endian
                 if little_endian:
-                    matrix = np.kron(matrix, get_non_neighbouring_matrix_little_endian(current_qubit_in_column) if is_non_neighbouring_gate(current_qubit_in_column) else Operator(current_qubit_in_column.operation).data)
+                    matrix = np.kron(matrix, get_non_neighbouring_matrix_little_endian(current_qubit_in_column) if \
+                        is_non_neighbouring_gate(current_qubit_in_column) else \
+                        current_qubit_in_column.get_matrix())
                 
                 # big endian
                 else:
-                    if len(current_qubit_in_column.qubits) == 1:
-                        matrix = np.kron(matrix, Operator(current_qubit_in_column.operation).data)
+                    if current_qubit_in_column.get_num_qubits() == 1:
+                        matrix = np.kron(matrix, current_qubit_in_column.get_matrix())
                     else:
                         matrix = np.kron(matrix, get_matrix_for_multi_qubit_big_endian(current_qubit_in_column))
         
         matrix_gate_json_list.append({"content": matrix.tolist(), "type": GATE,"key": i+1})
 
     return matrix_gate_json_list
+
 # CIRCUIT AND DIRAC
 def create_circuit_dirac_gates_json(num_qubits, grouped_gates):
     """
@@ -224,8 +233,8 @@ def create_circuit_dirac_gates_json(num_qubits, grouped_gates):
         for j in range(0, num_qubits):
             current_qubit_in_column = grouped_gates[i][j]
 
-            if type(current_qubit_in_column) == CircuitInstruction:
-                content.append({"gate": current_qubit_in_column.operation.name.upper(), "gate_type": GATE_INFO})
+            if type(current_qubit_in_column) == GateInformation:
+                content.append({"gate": current_qubit_in_column.get_name().upper(), "gate_type": GATE_INFO})
             elif current_qubit_in_column == NOT_INVOLVED:
                 content.append({"gate": IDENTITY_MATRIX_NAME, "gate_type": current_qubit_in_column})
             else: 
