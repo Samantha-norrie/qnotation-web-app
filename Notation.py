@@ -3,9 +3,10 @@ from qiskit.quantum_info.operators import Operator
 from qiskit.circuit import CircuitInstruction, Gate
 import numpy as np
 from gate_information import GateInformation
-from utils import * 
+from utils import *
 
 # MATRIX
+
 
 def simplify_single_matrix(matrix):
     """
@@ -17,7 +18,7 @@ def simplify_single_matrix(matrix):
     Returns:
         list[object]: Simplified matrix
     """
-    
+
     for j in range(0, len(matrix)):
         for k in range(0, len(matrix[j])):
 
@@ -26,14 +27,15 @@ def simplify_single_matrix(matrix):
 
             if real_val == 0.0 and imag_val == 0.0:
                 matrix[j][k] = 0.00
-            elif round(imag_val,4) == 0.0:     
+            elif round(imag_val, 4) == 0.0:
                 matrix[j][k] = float("{:.2f}".format(real_val))
-            elif round(imag_val,4) == 1.0:
+            elif round(imag_val, 4) == 1.0:
                 matrix[j][k] = " i "
             else:
                 matrix[j][k] = "{:.2f}".format(real_val + imag_val) + "i"
     return matrix
-    
+
+
 def simplify_matrices_json(matrices):
     """
     Wrapper for simplifying list of JSON objects describing matrices used in equation portion of matrix notation component
@@ -45,9 +47,10 @@ def simplify_matrices_json(matrices):
         list[object]: list of JSON objects with simplified matrices
     """
     for i in range(0, len(matrices)):
-        matrix =  matrices[i]["content"]
+        matrix = matrices[i]["content"]
         matrix = simplify_single_matrix(matrix)
     return matrices
+
 
 def create_matrix_state_vector_json(num_qubits, matrices):
     """
@@ -66,14 +69,23 @@ def create_matrix_state_vector_json(num_qubits, matrices):
     # Initial state (no gates applied yet) representing all qubits being set to 0
     vector = np.array([[1 if i == 0 else 0] for i in range(0, 2**num_qubits)])
 
-    matrix_vector_state_json.append({"content": vector.tolist(), "type": STATE,"key": 0})
+    matrix_vector_state_json.append(
+        {"content": vector.tolist(), "type": STATE, "key": 0}
+    )
 
     for i in range(0, len(matrices)):
 
         vector = np.dot(matrices[i]["content"], vector)
-        matrix_vector_state_json.append({"content": simplify_values_state_vector(vector.tolist()), "type": GATE,"key": i+1})
+        matrix_vector_state_json.append(
+            {
+                "content": simplify_values_state_vector(vector.tolist()),
+                "type": GATE,
+                "key": i + 1,
+            }
+        )
 
     return matrix_vector_state_json
+
 
 def simplify_values_state_vector(state_vector):
 
@@ -84,16 +96,19 @@ def simplify_values_state_vector(state_vector):
         if real_val == 0.0 and imag_val == 0.0:
             state_vector[i][0] = 0.0
         elif round(imag_val, 4) == 0.0:
-            
-            state_vector[i][0] = float(round(real_val,2))
-        elif round(imag_val,4) == 1.0:
+
+            state_vector[i][0] = float(round(real_val, 2))
+        elif round(imag_val, 4) == 1.0:
             state_vector[i][0] = "i"
         else:
-            state_vector[i][0] = str(round(real_val,2)) + str(round(imag_val,2)) + "i"
+            state_vector[i][0] = str(round(real_val, 2)) + str(round(imag_val, 2)) + "i"
 
     return state_vector
 
-def create_tensor_product_matrix_gate_json(num_qubits, grouped_gates, little_endian=False):
+
+def create_tensor_product_matrix_gate_json(
+    num_qubits, grouped_gates, little_endian=False
+):
     """
     Creates lists of matrices for tensor product setting
 
@@ -123,18 +138,39 @@ def create_tensor_product_matrix_gate_json(num_qubits, grouped_gates, little_end
 
                 if is_non_neighbouring_gate(current_qubit_in_column):
                     if little_endian:
-                        matrices.append(simplify_single_matrix(Operator(get_non_neighbouring_matrix_little_endian(current_qubit_in_column)).data.tolist()).copy())
+                        matrices.append(
+                            simplify_single_matrix(
+                                Operator(
+                                    get_non_neighbouring_matrix_little_endian(
+                                        current_qubit_in_column
+                                    )
+                                ).data.tolist()
+                            ).copy()
+                        )
                     else:
-                        matrices.append(simplify_single_matrix(Operator(get_matrix_for_multi_qubit_big_endian(current_qubit_in_column)).data.tolist()).copy())
+                        matrices.append(
+                            simplify_single_matrix(
+                                Operator(
+                                    get_matrix_for_multi_qubit_big_endian(
+                                        current_qubit_in_column
+                                    )
+                                ).data.tolist()
+                            ).copy()
+                        )
                 else:
-                    matrices.append(simplify_single_matrix(current_qubit_in_column.get_matrix().tolist()).copy())
+                    matrices.append(
+                        simplify_single_matrix(
+                            current_qubit_in_column.get_matrix().tolist()
+                        ).copy()
+                    )
 
             # append identity matrix if qubit is not being used by any other gate
             elif current_qubit_in_column == NOT_INVOLVED:
                 matrices.append(IDENTITY_MATRIX.tolist())
-                
-        matrix_gate_json_list.append({"content": matrices, "type": GATE,"key": i+1})
+
+        matrix_gate_json_list.append({"content": matrices, "type": GATE, "key": i + 1})
     return matrix_gate_json_list
+
 
 def create_matrix_gate_json(num_qubits, grouped_gates, little_endian=False):
     """
@@ -161,7 +197,11 @@ def create_matrix_gate_json(num_qubits, grouped_gates, little_endian=False):
             current_qubit_in_column = grouped_gates[i][j]
 
             # Continue if current qubit does not contain a GateInformation object or is involved in a gate
-            if current_qubit_in_column == AUXILIARY or current_qubit_in_column == CONTROL or current_qubit_in_column == TARGET:
+            if (
+                current_qubit_in_column == AUXILIARY
+                or current_qubit_in_column == CONTROL
+                or current_qubit_in_column == TARGET
+            ):
                 continue
 
             # Set matrix to equal identity matrix if no gate has been applied yet and qubit is not involved in any gate
@@ -174,12 +214,16 @@ def create_matrix_gate_json(num_qubits, grouped_gates, little_endian=False):
 
             # If no matrix has been applied yet..
             elif len(matrix) == 0:
- 
+
                 # little endian
                 if little_endian:
-                    matrix = get_non_neighbouring_matrix_little_endian(current_qubit_in_column) if \
-                        is_non_neighbouring_gate(current_qubit_in_column) else \
-                        current_qubit_in_column.get_matrix()
+                    matrix = (
+                        get_non_neighbouring_matrix_little_endian(
+                            current_qubit_in_column
+                        )
+                        if is_non_neighbouring_gate(current_qubit_in_column)
+                        else current_qubit_in_column.get_matrix()
+                    )
 
                 # big endian
                 else:
@@ -187,27 +231,44 @@ def create_matrix_gate_json(num_qubits, grouped_gates, little_endian=False):
                     if current_qubit_in_column.get_num_qubits() == 1:
                         matrix = current_qubit_in_column.get_matrix()
                     else:
-                        matrix = get_matrix_for_multi_qubit_big_endian(current_qubit_in_column)
+                        matrix = get_matrix_for_multi_qubit_big_endian(
+                            current_qubit_in_column
+                        )
 
-            # If matrices have already been applied...     
+            # If matrices have already been applied...
             else:
 
                 # little endian
                 if little_endian:
-                    matrix = np.kron(matrix, get_non_neighbouring_matrix_little_endian(current_qubit_in_column) if \
-                        is_non_neighbouring_gate(current_qubit_in_column) else \
-                        current_qubit_in_column.get_matrix())
-                
+                    matrix = np.kron(
+                        matrix,
+                        (
+                            get_non_neighbouring_matrix_little_endian(
+                                current_qubit_in_column
+                            )
+                            if is_non_neighbouring_gate(current_qubit_in_column)
+                            else current_qubit_in_column.get_matrix()
+                        ),
+                    )
+
                 # big endian
                 else:
                     if current_qubit_in_column.get_num_qubits() == 1:
                         matrix = np.kron(matrix, current_qubit_in_column.get_matrix())
                     else:
-                        matrix = np.kron(matrix, get_matrix_for_multi_qubit_big_endian(current_qubit_in_column))
-        
-        matrix_gate_json_list.append({"content": matrix.tolist(), "type": GATE,"key": i+1})
+                        matrix = np.kron(
+                            matrix,
+                            get_matrix_for_multi_qubit_big_endian(
+                                current_qubit_in_column
+                            ),
+                        )
+
+        matrix_gate_json_list.append(
+            {"content": matrix.tolist(), "type": GATE, "key": i + 1}
+        )
 
     return matrix_gate_json_list
+
 
 # CIRCUIT AND DIRAC
 def create_circuit_dirac_gates_json(num_qubits, grouped_gates):
@@ -223,7 +284,9 @@ def create_circuit_dirac_gates_json(num_qubits, grouped_gates):
     """
     circuit_dirac_gate_json_list = []
 
-    circuit_dirac_gate_json_list.append({"content": [[0] for i in range(0, num_qubits)], "type": STATE, "key": 0})
+    circuit_dirac_gate_json_list.append(
+        {"content": [[0] for i in range(0, num_qubits)], "type": STATE, "key": 0}
+    )
 
     # Go through each grouped gate column and check each qubit
     for i in range(0, len(grouped_gates)):
@@ -234,15 +297,25 @@ def create_circuit_dirac_gates_json(num_qubits, grouped_gates):
             current_qubit_in_column = grouped_gates[i][j]
 
             if type(current_qubit_in_column) == GateInformation:
-                content.append({"gate": current_qubit_in_column.get_name().upper(), "gate_type": GATE_INFO})
+                content.append(
+                    {
+                        "gate": current_qubit_in_column.get_name().upper(),
+                        "gate_type": GATE_INFO,
+                    }
+                )
             elif current_qubit_in_column == NOT_INVOLVED:
-                content.append({"gate": IDENTITY_MATRIX_NAME, "gate_type": current_qubit_in_column})
-            else: 
+                content.append(
+                    {"gate": IDENTITY_MATRIX_NAME, "gate_type": current_qubit_in_column}
+                )
+            else:
                 content.append({"gate": "", "gate_type": current_qubit_in_column})
 
-        circuit_dirac_gate_json_list.append({"content": content, "type": GATE, "key": i+1})
+        circuit_dirac_gate_json_list.append(
+            {"content": content, "type": GATE, "key": i + 1}
+        )
 
     return circuit_dirac_gate_json_list
+
 
 def format_matrix_state_vectors_for_dirac_state_json(num_qubits, state_vector):
     """
@@ -257,7 +330,7 @@ def format_matrix_state_vectors_for_dirac_state_json(num_qubits, state_vector):
     """
 
     dirac_state_json = []
-    format_val = '0' + str(num_qubits)+'b'
+    format_val = "0" + str(num_qubits) + "b"
 
     for i in range(0, len(state_vector)):
         values = []
@@ -265,7 +338,12 @@ def format_matrix_state_vectors_for_dirac_state_json(num_qubits, state_vector):
 
             # if the state exists, convert it into binary
             if state_vector[i]["content"][j][0] != 0:
-                values.append({"bin": format(j, format_val), "scalar": state_vector[i]["content"][j][0]})
+                values.append(
+                    {
+                        "bin": format(j, format_val),
+                        "scalar": state_vector[i]["content"][j][0],
+                    }
+                )
         dirac_state_json.append({"content": values, "type": STATE, "key": i})
 
     return dirac_state_json
