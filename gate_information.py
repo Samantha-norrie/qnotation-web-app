@@ -22,6 +22,12 @@ class GateInformation:
         self._target_qubit_indices = target_qubit_indices
         self._params = params
 
+    def __str__(self): 
+        return f"GateInformation(name='{self._name}', matrix={self._matrix}, num_qubits={self._num_qubits}, control_qubit_indices={self._control_qubit_indices}, target_qubit_indices={self._target_qubit_indices}, params={self._params} )"
+    
+    def __repr__(self):
+        return self.__str__()
+
     def get_name(self) -> str:
         return self._name
 

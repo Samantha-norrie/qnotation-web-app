@@ -1,6 +1,6 @@
 from qiskit import *
 from qiskit.quantum_info.operators import Operator
-from qiskit.circuit import CircuitInstruction, Instruction, Qubit
+from qiskit.circuit import CircuitInstruction, Instruction, Qubit, QuantumRegister
 from qiskit.circuit.library import HGate
 from errors import InvalidGateError, InputError
 import subprocess
@@ -13,7 +13,7 @@ from utils import *
 from errors import *
 
 
-def create_gate_information_list_for_gates(qc):
+def create_gate_information_list_for_gates(attributes_for_gates):
     """
     Creates GateInformation objects representing each gate in the given QuantumCircuit object
 
@@ -25,14 +25,12 @@ def create_gate_information_list_for_gates(qc):
     """
     gate_information_list = []
 
-    for circuit_instruction in qc.data:
-        gate = circuit_instruction.operation
-        qubits = circuit_instruction.qubits
-
-        # Get control and target qubit indices
-        qubit_indices = [qc.find_bit(q).index for q in qubits]
+    for gate in attributes_for_gates:
+        name = gate["name"]
+        qubit_indices = gate["qubit_indices"]
+        params = gate["params"]
         control_qubit_indices, target_qubit_indices = (
-            get_control_and_target_qubit_indices(gate.name, qubit_indices)
+            get_control_and_target_qubit_indices(name, qubit_indices)
         )
 
         # Transform gate into a matrix (workaround for Qiskit 1.3)
@@ -48,7 +46,7 @@ def create_gate_information_list_for_gates(qc):
         )
         qc_temp = QuantumCircuit(gate_qubit_size)
         qc_temp.append(
-            get_gate_object_from_gate_name(gate.name, gate.params),
+            get_gate_object_from_gate_name(name, params),
             [i for i in range(0, gate_qubit_size)],
         )
 
@@ -57,16 +55,15 @@ def create_gate_information_list_for_gates(qc):
         # Create GateInformation object and appending it to list
         gate_information_list.append(
             GateInformation(
-                gate.name,
+                name,
                 matrix,
                 len(qubit_indices),
                 control_qubit_indices,
                 target_qubit_indices,
-                gate.params,
+                params,
             )
         )
-        print("appended")
-    print(gate_information_list[0].get_matrix())
+
     return gate_information_list
 
 
@@ -124,23 +121,21 @@ def process_circuit_received(code_string):
     end_of_imports_found = False
 
     for i in range(0, len(code_lines)):
-        if not end_of_imports_found and "import numpy as np" in code_lines[i]:
+        if not end_of_imports_found and "from qiskit import QuantumCircuit" in code_lines[i]:
             code_string_formatted = (
                 code_string_formatted + code_lines[i] + "\ndef main():\n"
             )
             end_of_imports_found = True
         elif end_of_imports_found:
-            code_string_formatted = code_string_formatted + "   " + code_lines[i] + "\n"
+            code_string_formatted = code_string_formatted + "\t"+ code_lines[i] + "\n"
         else:
-            code_string_formatted = code_string_formatted + code_lines[i] + "\n"
+            code_string_formatted = code_string_formatted + code_lines[i] + "\n"\
 
     code_string_formatted = (
-        code_string_formatted + "   " + "print([qc.num_qubits, qc.data])" + "\nmain()"
+        code_string_formatted +  CIRCUIT_GATE_LOOP + "main()\n"
     )
 
     # Run code in temp file and return QuantumCircuit
-    gates = []
-    num_qubits = 0
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".py") as temp_file:
         temp_file.write(code_string_formatted.encode("utf-8"))
@@ -151,24 +146,15 @@ def process_circuit_received(code_string):
         )
         output = eval(result.stdout)
 
-        num_qubits, gates = output[0], output[1]
     except Exception as e:
+        print("input error caught in process_circuit_received:", e)
         raise InputError
     finally:
 
         # Ensure the temporary file is deleted after execution
         os.remove(temp_file_name)
 
-    # Create QuantumCircuit to return
-    qc = QuantumCircuit(num_qubits)
-
-    if num_qubits > MAX_NUM_QUBITS_FOR_APP:
-        raise TooManyQubitsError
-
-    for i in range(0, len(gates)):
-        qc.append(gates[i])
-
-    return qc
+    return output
 
 
 def group_gates(num_qubits, gates_and_indices):

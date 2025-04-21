@@ -8,6 +8,12 @@ import math
 import cmath
 import copy
 
+CIRCUIT_GATE_LOOP = '''\tgate_list = []\n
+\tfor gate in qc.data:\n\
+\t\tqubit_indices = [qc.find_bit(q).index for q in gate.qubits]
+\t\tgate_list.append({"name": gate.name, "qubit_indices": qubit_indices, "params": gate.params})\n
+\tprint([qc.num_qubits, gate_list])\n'''
+
 CONTROL = "CONTROL"
 TARGET = "TARGET"
 AUXILIARY = "AUXILIARY"
@@ -98,7 +104,6 @@ MAX_NUM_QUBITS_FOR_APP = 5
 MAX_NUM_QUBITS_FOR_TENSOR = 3
 
 def get_gate_object_from_gate_name(gate_name, params=[]):
-    print("in obj function")
     match gate_name:
         case GateNames.CONTROLLED_THREE_QUBIT_SQUARED_X.value:
             return C3SXGate()
@@ -127,7 +132,6 @@ def get_gate_object_from_gate_name(gate_name, params=[]):
         case GateNames.CONTROLLED_U.value:
             return CUGate(params[0], params[1], params[2], params[3])
         case GateNames.CONTROLLED_X.value:
-            print("hit cx")
             return CXGate()
         case GateNames.CONTROLLED_Y.value:
             return CYGate()

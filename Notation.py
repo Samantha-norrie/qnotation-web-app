@@ -317,7 +317,7 @@ def create_circuit_dirac_gates_json(num_qubits, grouped_gates):
     return circuit_dirac_gate_json_list
 
 
-def format_matrix_state_vectors_for_dirac_state_json(num_qubits, state_vector):
+def format_matrix_state_vectors_for_dirac_state_json(num_qubits, state_vector) -> None:
     """
     Make Dirac states using matrix state vectors. Only make states that have an amplitude != 0
 
