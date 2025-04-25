@@ -1,5 +1,7 @@
 # qnotation-be
 
-Welcome to the backend repo of QNotation! A beta version of the application is set to be released in July. The Jupyter Notebook demo version of QNotation can be found at https://github.com/Samantha-norrie/QNotation, and an extended abstract on it can be found at https://www.computer.org/csdl/proceedings-article/qce/2023/432302a373/1SuQKBiBjR6.
+Welcome to the backend repo of QNotation! This repo is for the web app version of the app (new version). 
 
-The frontend repo for this project can be found at https://github.com/Samantha-norrie/qnotation-fe 
+The QNotation paper can be found [here](https://ieeexplore.ieee.org/document/10821137)
+
+The Jupyter Notebook demo (2023) version of QNotation can be found [here](https://github.com/Samantha-norrie/QNotation).
