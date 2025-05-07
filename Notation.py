@@ -3,7 +3,7 @@ from qiskit.quantum_info.operators import Operator
 from qiskit.circuit import CircuitInstruction, Gate
 import numpy as np
 from gate_information import GateInformation
-from utils import *
+from Utils import *
 
 # MATRIX
 
