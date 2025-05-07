@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request, send_from_directory
-from notation import *
+from Notation import *
 from flask_cors import CORS
 from qiskit import *
 from preprocessing_utils import (
