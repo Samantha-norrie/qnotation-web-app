@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request, send_from_directory
-from Notation import *
+from notation import *
 from flask_cors import CORS
 from qiskit import *
 from preprocessing_utils import (
@@ -7,14 +7,14 @@ from preprocessing_utils import (
     group_gates,
     create_gate_information_list_for_gates,
 )
-from Utils import (
+from utils import (
     MESSAGE_TOO_MANY_QUBITS_ERROR,
     MESSAGE_TOO_MANY_QUBITS_FOR_TENSOR_ERROR,
     MESSAGE_INVALID_GATE_ERROR,
     MESSAGE_INPUT_ERROR,
     MESSAGE_UNKNOWN_ERROR,
 )
-from Errors import (
+from errors import (
     TooManyQubitsError,
     TooManyQubitsForTensorError,
     InvalidGateError,

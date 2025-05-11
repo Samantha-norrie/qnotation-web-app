@@ -1,12 +1,11 @@
-from qiskit import *
+from qiskit import QuantumCircuit
 from qiskit.quantum_info.operators import Operator
 from qiskit.circuit import CircuitInstruction, Gate
 import numpy as np
-from gate_information import GateInformation
-from Utils import *
+from GateInformation import GateInformation
+from utils import *
 
 # MATRIX
-
 
 def simplify_single_matrix(matrix):
     """
@@ -51,7 +50,6 @@ def simplify_matrices_json(matrices):
         matrix = simplify_single_matrix(matrix)
     return matrices
 
-
 def create_matrix_state_vector_json(num_qubits, matrices):
     """
     Creates JSON objects of state vectors representing the state of the quantum circuit at each of its columns
@@ -86,7 +84,6 @@ def create_matrix_state_vector_json(num_qubits, matrices):
 
     return matrix_vector_state_json
 
-
 def simplify_values_state_vector(state_vector):
 
     for i in range(0, len(state_vector)):
@@ -104,7 +101,6 @@ def simplify_values_state_vector(state_vector):
             state_vector[i][0] = str(round(real_val, 2)) + str(round(imag_val, 2)) + "i"
 
     return state_vector
-
 
 def create_tensor_product_matrix_gate_json(
     num_qubits, grouped_gates, little_endian=False
@@ -170,7 +166,6 @@ def create_tensor_product_matrix_gate_json(
 
         matrix_gate_json_list.append({"content": matrices, "type": GATE, "key": i + 1})
     return matrix_gate_json_list
-
 
 def create_matrix_gate_json(num_qubits, grouped_gates, little_endian=False):
     """
@@ -268,7 +263,6 @@ def create_matrix_gate_json(num_qubits, grouped_gates, little_endian=False):
         )
 
     return matrix_gate_json_list
-
 
 # CIRCUIT AND DIRAC
 def create_circuit_dirac_gates_json(num_qubits, grouped_gates):

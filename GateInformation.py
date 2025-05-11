@@ -1,7 +1,6 @@
 from qiskit import *
 import numpy as np
 
-
 class GateInformation:
     """A class for relating a CircuitInstruction to the indices of the qubits it is applied to. Done for Qiskit 1.3 port"""
 

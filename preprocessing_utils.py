@@ -1,4 +1,4 @@
-from qiskit import *
+from qiskit import QuantumCircuit
 from qiskit.quantum_info.operators import Operator
 from qiskit.circuit import CircuitInstruction, Instruction, Qubit, QuantumRegister
 from qiskit.circuit.library import HGate
@@ -8,7 +8,7 @@ import copy
 import sys
 import os
 import tempfile
-from gate_information import GateInformation
+from GateInformation import GateInformation
 from utils import *
 from errors import *
 

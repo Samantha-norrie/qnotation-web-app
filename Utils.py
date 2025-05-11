@@ -1,12 +1,12 @@
 from qiskit.circuit.library import *
-from errors import GateNotImplementedError
 from qiskit.quantum_info.operators import Operator
-from gate_information import GateInformation
-from enum import Enum
 import numpy as np
+from enum import Enum
 import math
 import cmath
 import copy
+from errors import GateNotImplementedError
+from GateInformation import GateInformation
 
 CIRCUIT_GATE_LOOP = '''\tgate_list = []\n
 \tfor gate in qc.data:\n\
