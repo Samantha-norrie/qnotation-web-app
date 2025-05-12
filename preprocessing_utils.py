@@ -121,7 +121,7 @@ def process_circuit_received(code_string):
     end_of_imports_found = False
 
     for i in range(0, len(code_lines)):
-        if not end_of_imports_found and "from qiskit import QuantumCircuit" in code_lines[i]:
+        if not end_of_imports_found and "import numpy as np" in code_lines[i]:
             code_string_formatted = (
                 code_string_formatted + code_lines[i] + "\ndef main():\n"
             )
