@@ -127,7 +127,7 @@ def process_circuit_received(code_string):
             )
             end_of_imports_found = True
         elif end_of_imports_found:
-            code_string_formatted = code_string_formatted + "\t"+ code_lines[i] + "\n"
+            code_string_formatted = code_string_formatted + "    "+ code_lines[i] + "\n"
         else:
             code_string_formatted = code_string_formatted + code_lines[i] + "\n"\
 
