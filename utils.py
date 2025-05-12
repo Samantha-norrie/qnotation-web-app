@@ -10,8 +10,8 @@ from GateInformation import GateInformation
 
 CIRCUIT_GATE_LOOP = '''\tgate_list = []\n
 \tfor gate in qc.data:\n\
-\t\tqubit_indices = [qc.find_bit(q).index for q in gate.qubits]
-\t\tgate_list.append({"name": gate.name, "qubit_indices": qubit_indices, "params": gate.params})\n
+\tqubit_indices = [qc.find_bit(q).index for q in gate.qubits]
+\tgate_list.append({"name": gate.name, "qubit_indices": qubit_indices, "params": gate.params})\n
 \tprint([qc.num_qubits, gate_list])\n'''
 
 CONTROL = "CONTROL"
