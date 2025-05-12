@@ -146,7 +146,9 @@ def process_circuit_received(code_string):
         result = subprocess.run(
             [sys.executable, temp_file_name], capture_output=True, text=True, timeout=5
         )
+        print("ERR", result.stderr)
         output = eval(result.stdout)
+
 
     except Exception as e:
         print("input error caught in process_circuit_received:", e)
