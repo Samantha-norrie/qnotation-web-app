@@ -135,6 +135,8 @@ def process_circuit_received(code_string):
         code_string_formatted +  CIRCUIT_GATE_LOOP + "main()\n"
     )
 
+    print("CODE STRING FORMATTED", code_string_formatted)
+
     # Run code in temp file and return QuantumCircuit
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".py") as temp_file:

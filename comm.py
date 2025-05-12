@@ -26,8 +26,8 @@ import os
 
 app = Flask(__name__)
 
-CORS(app, resources={r"/*": {"origins": "https://qnotation.vercel.app"}})
-#CORS(app, resources={r"/*": {"origins": "*"}})
+#CORS(app, resources={r"/*": {"origins": "https://qnotation.vercel.app"}})
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 
 @app.route("/", defaults={"path": ""})
@@ -42,7 +42,8 @@ def serve(path):
 @app.post("/get_notation_data")
 def get_notation_data():
 
-    qc_string = str(request.form.get("data[qc]"))
+    data = request.get_json()
+    qc_string = data.get("qc")
 
     matrix_gate_little_endian = None
     matrix_gate_big_endian = None
