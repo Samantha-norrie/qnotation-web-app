@@ -43,6 +43,7 @@ def serve(path):
 def get_notation_data():
 
     data = request.get_json()
+    print("DATA", data)
     qc_string = data.get("qc")
 
     matrix_gate_little_endian = None
