@@ -18,7 +18,7 @@ CIRCUIT_GATE_LOOP = '''    gate_list = []\n
     for gate in qc.data:\n\
         qubit_indices = [qc.find_bit(q).index for q in gate.qubits]
         gate_list.append({"name": gate.name, "qubit_indices": qubit_indices, "params": gate.params})\n
-        print([qc.num_qubits, gate_list])\n'''
+    print([qc.num_qubits, gate_list])\n'''
 
 CONTROL = "CONTROL"
 TARGET = "TARGET"

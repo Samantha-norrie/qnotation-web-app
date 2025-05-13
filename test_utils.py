@@ -7,11 +7,11 @@ from abc import ABC, abstractmethod
 EMPTY = ""
 NO_GATES = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(2)\n\n# Insert code below\n"
 TYPO = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(2)\n\n# Insert code below\nqv.h(0)"
-SINGLE_QUBIT_SINGLE_HADAMARD = "from qiskit import QuantumCircuit\nqc = QuantumCircuit(1)\n\n# Insert code below\nqc.h(0)"
+SINGLE_QUBIT_SINGLE_HADAMARD = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(1)\n\n# Insert code below\nqc.h(0)"
 TOO_MANY_QUBITS = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(100)\n\n# Insert code below\nqc.h(0)"
 SINGLE_COLUMN_TWO_QUBIT_NEIGHBOURING_GATE = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(2)\n\n# Insert code below\nqc.cx(0, 1)\n"
-SINGLE_COLUMN_TWO_QUBIT_NEIGHBOURING_GATE_REVERSE = "from qiskit import QuantumCircuit\nqc = QuantumCircuit(2)\n\n# Insert code below\nqc.cx(1, 0)\n"
-BELL_STATE_THREE_QUBITS = "from qiskit import QuantumCircuit\nqc = QuantumCircuit(3)\n\n# Insert code below\nqc.h(0)\nqc.cx(0, 1)\n"
+SINGLE_COLUMN_TWO_QUBIT_NEIGHBOURING_GATE_REVERSE = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(2)\n\n# Insert code below\nqc.cx(1, 0)\n"
+BELL_STATE_THREE_QUBITS = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(3)\n\n# Insert code below\nqc.h(0)\nqc.cx(0, 1)\n"
 
 URL = "http://127.0.0.1:8000/get_notation_data"
 HEADERS = {"Content-Type": "application/json"}
