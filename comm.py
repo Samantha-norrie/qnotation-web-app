@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request, send_from_directory
 from notation import *
 from flask_cors import CORS
 from qiskit import *
-from preprocessing_utils import (
+from preprocessing import (
     process_circuit_received,
     group_gates,
     create_gate_information_list_for_gates,
@@ -18,7 +18,8 @@ from errors import (
     TooManyQubitsError,
     TooManyQubitsForTensorError,
     InvalidGateError,
-    InputError,
+    InputError, 
+    HigherIndexedControlQubitError
 )
 
 import os
@@ -150,6 +151,9 @@ def get_notation_data():
         status = 400
     except InputError:
         message = MESSAGE_INPUT_ERROR
+        status = 400
+    except HigherIndexedControlQubitError:
+        message = MESSAGE_HIGHER_INDEXED_CONTROL_QUBIT_ERROR
         status = 400
     except Exception as e:
         print("ERROR ", e)
