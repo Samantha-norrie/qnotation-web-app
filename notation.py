@@ -132,33 +132,11 @@ def create_tensor_product_matrix_gate_json(
             # format and append matrices found to list
             if type(current_qubit_in_column) == GateInformation:
 
-                if is_non_neighbouring_gate(current_qubit_in_column):
-                    if little_endian:
-                        matrices.append(
-                            simplify_single_matrix(
-                                Operator(
-                                    get_non_neighbouring_matrix_little_endian(
-                                        current_qubit_in_column
-                                    )
-                                ).data.tolist()
-                            ).copy()
-                        )
-                    else:
-                        matrices.append(
-                            simplify_single_matrix(
-                                Operator(
-                                    get_matrix_for_multi_qubit_big_endian(
-                                        current_qubit_in_column
-                                    )
-                                ).data.tolist()
-                            ).copy()
-                        )
-                else:
-                    matrices.append(
-                        simplify_single_matrix(
-                            current_qubit_in_column.get_matrix().tolist()
-                        ).copy()
-                    )
+                matrices.append(
+                    simplify_single_matrix(
+                        current_qubit_in_column.get_matrix().tolist()
+                    ).copy()
+                )
 
             # append identity matrix if qubit is not being used by any other gate
             elif current_qubit_in_column == NOT_INVOLVED:
@@ -212,14 +190,7 @@ def create_matrix_gate_json(num_qubits, grouped_gates, little_endian=False):
 
                 # little endian
                 if little_endian:
-                    matrix = (
-                        get_non_neighbouring_matrix_little_endian(
-                            current_qubit_in_column
-                        )
-                        if is_non_neighbouring_gate(current_qubit_in_column)
-                        else current_qubit_in_column.get_matrix()
-                    )
-
+                    matrix = current_qubit_in_column.get_matrix()
                 # big endian
                 else:
 
@@ -236,14 +207,7 @@ def create_matrix_gate_json(num_qubits, grouped_gates, little_endian=False):
                 # little endian
                 if little_endian:
                     matrix = np.kron(
-                        matrix,
-                        (
-                            get_non_neighbouring_matrix_little_endian(
-                                current_qubit_in_column
-                            )
-                            if is_non_neighbouring_gate(current_qubit_in_column)
-                            else current_qubit_in_column.get_matrix()
-                        ),
+                        matrix, current_qubit_in_column.get_matrix()
                     )
 
                 # big endian

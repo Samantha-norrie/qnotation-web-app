@@ -23,6 +23,3 @@ class UnknownError(Exception):
 
 class HigherIndexedControlQubitError(Exception):
     pass
-
-class NonNeighbouringQubitsError(Exception):
-    pass

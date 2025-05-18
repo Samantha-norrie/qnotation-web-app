@@ -197,29 +197,6 @@ def get_gate_object_from_gate_name(gate_name, params=[]):
         case _:
             raise GateNotImplementedError
 
-def is_non_neighbouring_gate(gate):
-    """
-    Checks if given gate has non-neighbouring qubits
-
-    Args:
-        gate (GateInformation): the gate to be checked
-
-    Returns:
-        boolean: True if the given gate contains non-neighbouring qubits
-    """
-    
-    
-    if gate.get_num_qubits() > 1:
-
-        sorted_indices = copy.deepcopy(gate.get_control_qubit_indices() + gate.get_target_qubit_indices())
-        sorted_indices.sort()
-
-        for i in range(1, len(sorted_indices)):
-            if sorted_indices[i] - sorted_indices[i-1] > 1:
-                return True
-               
-    return False
-
 # MULTI-QUBIT HANDLING
 SQRT2_INV= 1 / np.sqrt(2)
 
@@ -246,31 +223,6 @@ CH_BE = np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, SQRT2_INV, SQRT2_INV],
                 [0.+0.j, 0.+0.j, SQRT2_INV, -SQRT2_INV]])
 
-
-# TODO Kept in for future non-neighbouring updates
-CH_BE_ONE_GAP = np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-    [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-    [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-    [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-    [SQRT2_INV+0.j, 0.+0.j, 0.+0.j, 0.+0.j, SQRT2_INV+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-    [SQRT2_INV+0.j, 0.+0.j, 0.+0.j, 0.+0.j, -SQRT2_INV+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-    [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, SQRT2_INV+0.j, 0.+0.j],
-    [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, SQRT2_INV+0.j, -SQRT2_INV+0.j]])
-
-CH_BE_TWO_GAP = None
-
-CH_BE_THREE_GAP = None
-
-CH_LE_ONE_GAP = np.array([
-    [1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-    [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-    [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-    [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j], 
-    [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, SQRT2_INV+0.j, 0.+0.j, SQRT2_INV+0.j, 0.+0.j],
-    [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, SQRT2_INV+0.j, 0.+0.j, SQRT2_INV+0.j],  
-    [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, SQRT2_INV+0.j, 0.+0.j, -SQRT2_INV+0.j, 0.+0.j], 
-    [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, SQRT2_INV+0.j, 0.+0.j, -SQRT2_INV+0.j]]) 
-
 CSWAP_BE = np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 1+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
@@ -289,49 +241,11 @@ CX_BE = np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 0+0.j, 1+0.j],
                 [0.+0.j, 0.+0.j, 1+0.j, 0+0.j]])
-CX_BE_ONE_GAP = np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-    [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-    [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-    [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-    [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
-    [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-    [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j],
-    [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j]])
-
-CX_LE_ONE_GAP = np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-    [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
-    [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-    [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j],
-    [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-    [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-    [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
-    [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]])
 
 CY_BE = np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 0+0.j, 0-1.j],
                 [0.+0.j, 0.+0.j, 0+1.j, 0+0.j]])
-
-
-# TODO Kept in for future non-neighbouring updates
-CY_BE_ONE_GAP = np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.-1.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+1.j, 0.+0.j]])
-
-# TODO Kept in for future non-neighbouring updates
-CY_LE_ONE_GAP = np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.-1.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+1.j, 1.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.-1.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+1.j, 0.+0.j]])
 
 RCCX_BE = np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                         [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
@@ -457,21 +371,6 @@ def get_rzx_be(theta):
                             [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
                             [0.+0.j, 0.+0.j, math.cos(theta/2)+0.j, 1j*math.sin(theta/2)+0.j],
                             [0.+0.j, 0.+0.j, 1j*math.sin(theta/2)+0.j, math.cos(theta/2)+0.j]])
-
-# TODO Kept in for future non-neighbouring updates
-def get_non_neighbouring_matrix_little_endian(gate: GateInformation):
-    name = gate.get_name()
-    match name:
-        case "cp":
-            return get_cp_be(gate.get_params(), 1)
-        case "crx":
-            return get_crx_be(gate.get_params(), True, 1)
-        case "cx":
-            return CX_LE_ONE_GAP
-        case "cy":
-            return CY_LE_ONE_GAP
-        case _:
-            raise GateNotImplementedError()
         
 def get_matrix_for_multi_qubit_big_endian(gate: GateInformation):
     name = gate.get_name()

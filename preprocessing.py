@@ -64,9 +64,6 @@ def create_gate_information_list_for_gates(attributes_for_gates):
                 target_qubit_indices,
                 params,
             )
-        
-        if is_non_neighbouring_gate(new_gate_information):
-            raise NonNeighbouringQubitsError()
 
         gate_information_list.append(new_gate_information)
 

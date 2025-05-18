@@ -3,7 +3,7 @@ import asyncio
 import json
 import pytest
 from abc import ABC, abstractmethod
-from utils import MESSAGE_HIGHER_INDEXED_CONTROL_QUBIT_ERROR, MESSAGE_NON_NEIGHBOURING_QUBITS_ERROR
+from utils import MESSAGE_HIGHER_INDEXED_CONTROL_QUBIT_ERROR, MESSAGE_UNKNOWN_ERROR
 
 EMPTY = ""
 NO_GATES = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(2)\n\n# Insert code below\n"
@@ -95,7 +95,7 @@ RESULTS_SINGLE_QUBIT_SINGLE_HADAMARD = {
     ],
     "message": "",
     "num_qubits": 1,
-    "status": 200,
+    "status": SUCCESS,
 }
 RESULTS_SINGLE_COLUMN_TWO_QUBIT_NEIGHBOURING_GATE = {
     "circuit_dirac_gate_big_endian": [{'content': [[0], [0]], 'type': 'STATE', 'key': 0}, {'content': [{'gate': 'CX', 'gate_type': 'GATE INFO'}, {'gate': '', 'gate_type': 'TARGET'}], 'type': 'GATE', 'key': 1}],
@@ -110,7 +110,7 @@ RESULTS_SINGLE_COLUMN_TWO_QUBIT_NEIGHBOURING_GATE = {
     "matrix_state_vector_little_endian": [{'content': [[1], [0], [0], [0]], 'type': 'STATE', 'key': 0}, {'content': [[1.0], [0.0], [0.0], [0.0]], 'type': 'GATE', 'key': 1}],
     "message": "",
     "num_qubits": 2,
-    "status": 200,
+    "status": SUCCESS,
 }
 
 RESULTS_BELL_STATES_THREE_QUBITS = {
@@ -126,7 +126,7 @@ RESULTS_BELL_STATES_THREE_QUBITS = {
     "matrix_state_vector_little_endian": [{'content': [[1], [0], [0], [0], [0], [0], [0], [0]], 'type': 'STATE', 'key': 0}, {'content': [[0.71], [0.71], [0.0], [0.0], [0.0], [0.0], [0.0], [0.0]], 'type': 'GATE', 'key': 1}, {'content': [[0.71], [0.0], [0.0], [0.71], [0.0], [0.0], [0.0], [0.0]], 'type': 'GATE', 'key': 2}],
     "message": "",
     "num_qubits": 3,
-    "status": 200,
+    "status": SUCCESS,
 }
 
 RESULTS_HIGHER_CONTROL_QUBIT_INDEX = {
@@ -142,7 +142,7 @@ RESULTS_HIGHER_CONTROL_QUBIT_INDEX = {
     "matrix_state_vector_little_endian": None,
     "message": MESSAGE_HIGHER_INDEXED_CONTROL_QUBIT_ERROR,
     "num_qubits": 0,
-    "status": 400,
+    "status": BAD_REQUEST_ERR,
 }
 
 RESULTS_NON_NEIGHBOURING_QUBITS = {
@@ -156,9 +156,9 @@ RESULTS_NON_NEIGHBOURING_QUBITS = {
     "matrix_gate_tensor_little_endian": None,
     "matrix_state_vector_big_endian": None,
     "matrix_state_vector_little_endian": None,
-    "message": MESSAGE_NON_NEIGHBOURING_QUBITS_ERROR,
+    "message": MESSAGE_UNKNOWN_ERROR,
     "num_qubits": 0,
-    "status": 400,
+    "status": SERVER_ERR,
 }
 
 
