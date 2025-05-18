@@ -1,6 +1,6 @@
 # QNotation
 
-QNotation is a web application designed to help users convert between circuit, Dirac, and matrix notation in the context of quantum computing.
+[QNotation](https://qnotation.vercel.app/) is a web application designed to help users convert between circuit, Dirac, and matrix notation in the context of quantum computing.
 ## Workflow
 
 ## Publications
