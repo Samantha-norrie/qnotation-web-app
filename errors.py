@@ -20,3 +20,6 @@ class GateNotImplementedError(Exception):
 
 class UnknownError(Exception):
     pass
+
+class HigherIndexedControlQubitError(Exception):
+    pass

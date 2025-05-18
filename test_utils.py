@@ -3,6 +3,7 @@ import asyncio
 import json
 import pytest
 from abc import ABC, abstractmethod
+from utils import MESSAGE_HIGHER_INDEXED_CONTROL_QUBIT_ERROR, MESSAGE_UNKNOWN_ERROR
 
 EMPTY = ""
 NO_GATES = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(2)\n\n# Insert code below\n"
@@ -12,6 +13,8 @@ TOO_MANY_QUBITS = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = Q
 SINGLE_COLUMN_TWO_QUBIT_NEIGHBOURING_GATE = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(2)\n\n# Insert code below\nqc.cx(0, 1)\n"
 SINGLE_COLUMN_TWO_QUBIT_NEIGHBOURING_GATE_REVERSE = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(2)\n\n# Insert code below\nqc.cx(1, 0)\n"
 BELL_STATE_THREE_QUBITS = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(3)\n\n# Insert code below\nqc.h(0)\nqc.cx(0, 1)\n"
+HIGHER_CONTROL_QUBIT_INDEX = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(3)\n\n# Insert code below\nqc.h(0)\nqc.cx(1, 0)\n"
+NON_NEIGHBOURING_QUBITS = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(3)\n\n# Insert code below\nqc.h(0)\nqc.cx(0, 2)\n"
 
 URL = "http://127.0.0.1:8000/get_notation_data"
 HEADERS = {"Content-Type": "application/json"}
@@ -92,7 +95,7 @@ RESULTS_SINGLE_QUBIT_SINGLE_HADAMARD = {
     ],
     "message": "",
     "num_qubits": 1,
-    "status": 200,
+    "status": SUCCESS,
 }
 RESULTS_SINGLE_COLUMN_TWO_QUBIT_NEIGHBOURING_GATE = {
     "circuit_dirac_gate_big_endian": [{'content': [[0], [0]], 'type': 'STATE', 'key': 0}, {'content': [{'gate': 'CX', 'gate_type': 'GATE INFO'}, {'gate': '', 'gate_type': 'TARGET'}], 'type': 'GATE', 'key': 1}],
@@ -107,7 +110,7 @@ RESULTS_SINGLE_COLUMN_TWO_QUBIT_NEIGHBOURING_GATE = {
     "matrix_state_vector_little_endian": [{'content': [[1], [0], [0], [0]], 'type': 'STATE', 'key': 0}, {'content': [[1.0], [0.0], [0.0], [0.0]], 'type': 'GATE', 'key': 1}],
     "message": "",
     "num_qubits": 2,
-    "status": 200,
+    "status": SUCCESS,
 }
 
 RESULTS_BELL_STATES_THREE_QUBITS = {
@@ -123,7 +126,39 @@ RESULTS_BELL_STATES_THREE_QUBITS = {
     "matrix_state_vector_little_endian": [{'content': [[1], [0], [0], [0], [0], [0], [0], [0]], 'type': 'STATE', 'key': 0}, {'content': [[0.71], [0.71], [0.0], [0.0], [0.0], [0.0], [0.0], [0.0]], 'type': 'GATE', 'key': 1}, {'content': [[0.71], [0.0], [0.0], [0.71], [0.0], [0.0], [0.0], [0.0]], 'type': 'GATE', 'key': 2}],
     "message": "",
     "num_qubits": 3,
-    "status": 200,
+    "status": SUCCESS,
+}
+
+RESULTS_HIGHER_CONTROL_QUBIT_INDEX = {
+    "circuit_dirac_gate_big_endian": None,
+    "circuit_dirac_gate_little_endian": None,
+    "dirac_state_vector_big_endian": None,
+    "dirac_state_vector_little_endian": None,
+    "matrix_gate_big_endian": None,
+    "matrix_gate_little_endian": None,
+    "matrix_gate_tensor_big_endian": None,
+    "matrix_gate_tensor_little_endian": None,
+    "matrix_state_vector_big_endian": None,
+    "matrix_state_vector_little_endian": None,
+    "message": MESSAGE_HIGHER_INDEXED_CONTROL_QUBIT_ERROR,
+    "num_qubits": 0,
+    "status": BAD_REQUEST_ERR,
+}
+
+RESULTS_NON_NEIGHBOURING_QUBITS = {
+    "circuit_dirac_gate_big_endian": None,
+    "circuit_dirac_gate_little_endian": None,
+    "dirac_state_vector_big_endian": None,
+    "dirac_state_vector_little_endian": None,
+    "matrix_gate_big_endian": None,
+    "matrix_gate_little_endian": None,
+    "matrix_gate_tensor_big_endian": None,
+    "matrix_gate_tensor_little_endian": None,
+    "matrix_state_vector_big_endian": None,
+    "matrix_state_vector_little_endian": None,
+    "message": MESSAGE_UNKNOWN_ERROR,
+    "num_qubits": 0,
+    "status": SERVER_ERR,
 }
 
 
