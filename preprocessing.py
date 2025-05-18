@@ -33,6 +33,10 @@ def create_gate_information_list_for_gates(attributes_for_gates):
             get_control_and_target_qubit_indices(name, qubit_indices)
         )
 
+        for control_qubit_index in control_qubit_indices:
+            if any(target_qubit_index < control_qubit_index for target_qubit_index in target_qubit_indices):
+                raise HigherIndexedControlQubitError()
+
         # Transform gate into a matrix (workaround for Qiskit 1.3)
         sorted_qubit_indices = copy.deepcopy(qubit_indices)
         sorted_qubit_indices.sort()
@@ -52,9 +56,7 @@ def create_gate_information_list_for_gates(attributes_for_gates):
 
         matrix = Operator(qc_temp).data
 
-        # Create GateInformation object and appending it to list
-        gate_information_list.append(
-            GateInformation(
+        new_gate_information = GateInformation(
                 name,
                 matrix,
                 len(qubit_indices),
@@ -62,7 +64,8 @@ def create_gate_information_list_for_gates(attributes_for_gates):
                 target_qubit_indices,
                 params,
             )
-        )
+
+        gate_information_list.append(new_gate_information)
 
     return gate_information_list
 
