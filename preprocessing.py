@@ -56,9 +56,7 @@ def create_gate_information_list_for_gates(attributes_for_gates):
 
         matrix = Operator(qc_temp).data
 
-        # Create GateInformation object and appending it to list
-        gate_information_list.append(
-            GateInformation(
+        new_gate_information = GateInformation(
                 name,
                 matrix,
                 len(qubit_indices),
@@ -66,7 +64,11 @@ def create_gate_information_list_for_gates(attributes_for_gates):
                 target_qubit_indices,
                 params,
             )
-        )
+        
+        if is_non_neighbouring_gate(new_gate_information):
+            raise NonNeighbouringQubitsError()
+
+        gate_information_list.append(new_gate_information)
 
     return gate_information_list
 

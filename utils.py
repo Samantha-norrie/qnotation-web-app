@@ -32,6 +32,7 @@ MESSAGE_TOO_MANY_QUBITS_FOR_TENSOR_ERROR = "Too many qubits used for tensor sett
 MESSAGE_INVALID_GATE_ERROR = "Invalid gate(s) used."
 MESSAGE_GATE_NOT_SUPPORTED_ERROR = "Gate(s) not supported."
 MESSAGE_HIGHER_INDEXED_CONTROL_QUBIT_ERROR = "One or more control qubits have an index higher than their respective target qubit(s)"
+MESSAGE_NON_NEIGHBOURING_QUBITS_ERROR = "Multi-qubit gate(s) contain non-neighbouring qubits"
 MESSAGE_UNKNOWN_ERROR = "UNKNOWN ERROR"
 class GateNames(Enum):
     CONTROLLED_CONTROLLED_X = "ccx"
@@ -99,12 +100,6 @@ MAX_NUM_QUBITS_FOR_TENSOR = 3
 
 def get_gate_object_from_gate_name(gate_name, params=[]):
     match gate_name:
-        case GateNames.CONTROLLED_THREE_QUBIT_SQUARED_X.value:
-            return C3SXGate()
-        case GateNames.CONTROLLED_THREE_QUBIT_X.value:
-            return C3XGate()
-        case GateNames.CONTROLLED_FOUR_QUBIT_X.value:
-            return C4XGate()
         case GateNames.CONTROLLED_CONTROLLED_X.value:
             return CCXGate()
         case GateNames.CONTROLLED_CONTROLLED_Z.value:
@@ -248,17 +243,19 @@ CCZ_BE = np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0
 
 CH_BE = np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
-                [0.+0.j, 0.+0.j, 0.70710678+0.j, 0.70710678+0.j],
-                [0.+0.j, 0.+0.j, 0.70710678+0.j, -0.70710678+0.j]])
+                [0.+0.j, 0.+0.j, SQRT2_INV, SQRT2_INV],
+                [0.+0.j, 0.+0.j, SQRT2_INV, -SQRT2_INV]])
 
-CH_BE_ONE_GAP = np.array([1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+
+# TODO Kept in for future non-neighbouring updates
+CH_BE_ONE_GAP = np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
     [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
     [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
     [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
     [SQRT2_INV+0.j, 0.+0.j, 0.+0.j, 0.+0.j, SQRT2_INV+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
     [SQRT2_INV+0.j, 0.+0.j, 0.+0.j, 0.+0.j, -SQRT2_INV+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
     [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, SQRT2_INV+0.j, 0.+0.j],
-    [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, SQRT2_INV+0.j, -SQRT2_INV+0.j])
+    [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, SQRT2_INV+0.j, -SQRT2_INV+0.j]])
 
 CH_BE_TWO_GAP = None
 
@@ -302,12 +299,12 @@ CX_BE_ONE_GAP = np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.
     [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j]])
 
 CX_LE_ONE_GAP = np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-    [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],  # |001⟩ → |101⟩
-    [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],  # |010⟩
-    [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j],  # |011⟩ → |111⟩
-    [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],  # |100⟩
-    [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],  # |101⟩ → |001⟩
-    [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],  # |110⟩
+    [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
+    [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+    [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j],
+    [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+    [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+    [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
     [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]])
 
 CY_BE = np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
@@ -316,6 +313,7 @@ CY_BE = np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 0+1.j, 0+0.j]])
 
 
+# TODO Kept in for future non-neighbouring updates
 CY_BE_ONE_GAP = np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                         [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                         [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
@@ -325,6 +323,7 @@ CY_BE_ONE_GAP = np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.
                         [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.-1.j],
                         [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+1.j, 0.+0.j]])
 
+# TODO Kept in for future non-neighbouring updates
 CY_LE_ONE_GAP = np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                         [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                         [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
@@ -459,7 +458,7 @@ def get_rzx_be(theta):
                             [0.+0.j, 0.+0.j, math.cos(theta/2)+0.j, 1j*math.sin(theta/2)+0.j],
                             [0.+0.j, 0.+0.j, 1j*math.sin(theta/2)+0.j, math.cos(theta/2)+0.j]])
 
-# TODO update for bigger gaps
+# TODO Kept in for future non-neighbouring updates
 def get_non_neighbouring_matrix_little_endian(gate: GateInformation):
     name = gate.get_name()
     match name:

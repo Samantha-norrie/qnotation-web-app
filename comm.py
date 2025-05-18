@@ -12,6 +12,7 @@ from utils import (
     MESSAGE_TOO_MANY_QUBITS_FOR_TENSOR_ERROR,
     MESSAGE_INVALID_GATE_ERROR,
     MESSAGE_INPUT_ERROR,
+    MESSAGE_NON_NEIGHBOURING_QUBITS_ERROR,
     MESSAGE_UNKNOWN_ERROR,
 )
 from errors import (
@@ -19,7 +20,8 @@ from errors import (
     TooManyQubitsForTensorError,
     InvalidGateError,
     InputError, 
-    HigherIndexedControlQubitError
+    HigherIndexedControlQubitError,
+    NonNeighbouringQubitsError
 )
 
 import os
@@ -154,6 +156,9 @@ def get_notation_data():
         status = 400
     except HigherIndexedControlQubitError:
         message = MESSAGE_HIGHER_INDEXED_CONTROL_QUBIT_ERROR
+        status = 400
+    except NonNeighbouringQubitsError:
+        message = MESSAGE_NON_NEIGHBOURING_QUBITS_ERROR
         status = 400
     except Exception as e:
         print("ERROR ", e)
