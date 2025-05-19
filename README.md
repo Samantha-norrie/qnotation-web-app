@@ -17,8 +17,8 @@ Example input can be found in the *EXAMPLES* dropdown.
 ### 2. Interpreting notation data
 
 ## Publications
-The QNotation paper can be found [here](https://ieeexplore.ieee.org/document/10821137)
-The Jupyter Notebook demo (2023) version of QNotation can be found [here](https://github.com/Samantha-norrie/QNotation), and its publication can be found [here](https://ieeexplore.ieee.org/document/10313602).
+- Samantha Norrie, Anthony Estey, Hausi Müller, Ulrike Stege, [QNotation: A Visual Browser-Based Notation Translator for Learning Quantum Computing](https://ieeexplore.ieee.org/document/10821137), technical paper published in the proceedings of QSEEC 2024 (QCE 2024)
+- Samantha Norrie, Anthony Estey, [QNotation: An Interactive Visual Tool to Lower Learning Barriers in Quantum Computing](https://ieeexplore.ieee.org/document/10313602), extended abstract and poster published in QCE 2023 –*Jupyter notebook version*
 
 ## Disclaimer
 QNotation is currently in **beta**. Although it has been tested, it may still contain bugs or unexpected behaviour.
