@@ -21,7 +21,12 @@ Here are some points to keep in mind while creating your quantum circuits for QN
 Example input can be found in the *EXAMPLES* dropdown.
 
 ### 2. Interpreting notation data
-QNotation contains interactive visualizations for circuit, Dirac, and matrix. Clicking on different sections of a notation will reveal its equivalent sections in the other notations (in orange). The quantum state after the selected sections is shown on the right of the Dirac and matrix visualization subsections
+QNotation contains interactive visualizations for circuit, Dirac, and matrix. Clicking on different sections of a notation will reveal its equivalent sections in the other notations (in orange). The quantum state after the selected sections is shown on the right of the Dirac and matrix visualization subsections.
+
+#### 2.1 Additional features for exploring 
+A couple of toggles have been included on the bottom right of the app:
+- **Little endian (LE) toggle**: allows for toggling between little endian and big endian ordering
+- **Tensor (⊗) toggle**: allows matrix notation visualization to be broken down into tensor products (for quantum circuits with 3 qubits or less)
 
 ## Publications
 - Samantha Norrie, Anthony Estey, Hausi Müller, Ulrike Stege, [QNotation: A Visual Browser-Based Notation Translator for Learning Quantum Computing](https://ieeexplore.ieee.org/document/10821137), technical paper published in the proceedings of QSEEC 2024 (QCE 2024)
