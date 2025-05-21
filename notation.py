@@ -195,6 +195,7 @@ def create_matrix_gate_json(num_qubits, grouped_gates, little_endian=False):
                 else:
 
                     if current_qubit_in_column.get_num_qubits() == 1:
+                        print("HERE")
                         matrix = current_qubit_in_column.get_matrix()
                     else:
                         matrix = get_matrix_for_multi_qubit_big_endian(

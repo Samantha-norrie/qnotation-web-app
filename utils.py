@@ -54,14 +54,14 @@ class GateNames(Enum):
     DIAGONAL = "d"
     GLOBAL_PHASE = "gp"
     HADAMARD = "h"
-    IDENTITY = "i"
+    IDENTITY = "id"
     MULTI_CONTROLLED_MULTI_TARGET = "mcmt"
     MULTI_CONTROLLED_PHASE = "mcp"
     MULTI_CONTROLLED_X = "mcx"
     PERMUTATION = "permutation"
     PHASE = "p"
     QUANTUM_FOURIER_TRANSFORM = "qft"
-    RELATIVE_PHASE_CONTROLLED_X = "rc3x"
+    RELATIVE_PHASE_CONTROLLED_X = "rcccx"
     RELATIVE_PHASE_CONTROLLED_CONTROLLED_X = "rccx"
     ROTATIONAL = "r"
     ROTATIONAL_V = "rv"
@@ -104,6 +104,8 @@ def get_gate_object_from_gate_name(gate_name, params=[]):
             return CCXGate()
         case GateNames.CONTROLLED_CONTROLLED_Z.value:
             return CCZGate()
+        case GateNames.CONTROLLED_HADAMARD.value:
+            return CHGate()
         case GateNames.CONTROLLED_PHASE.value:
             return CPhaseGate(params[0])
         case GateNames.CONTROLLED_ROTAIONAL_X.value:
@@ -256,7 +258,7 @@ RCCX_BE = np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+
                         [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j],
                         [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, -1.+0.j, 0.+0.j]])
 
-RCX_BE = np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+RCCCX_BE = np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                         [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
                         [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j],
                         [0.+0.j, 0.+0.j, -1.+0.j, 0.+0.j]])
@@ -266,31 +268,11 @@ def get_cp_be(phi):
                                 [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
                                 [0.+0.j, 0.+0.j, 0.+0.j, cmath.exp(1j * phi)]])
     
-def get_crx_be(theta, little_endian=False, num_gap_qubits=0):
-    if little_endian:
-        if num_gap_qubits == 1:
-            return np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, math.cos(theta/2)+0.j, 0.+0.j, 0.+0.j, math.sin(theta/2)-1.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, math.cos(theta/2)+0.j, math.sin(theta/2)-1.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, math.sin(theta/2)-1.j, math.cos(theta/2)+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, math.sin(theta/2)-1.j, 0.+0.j, 0.+0.j, math.cos(theta/2)+0.j]])
-    else:
-        if num_gap_qubits == 1:
-            return np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, math.cos(theta/2)+0.j, math.sin(theta/2)-1.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, math.sin(theta/2)-1.j, math.cos(theta/2)+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, math.cos(theta/2)+0.j, math.sin(theta/2)-1.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, math.sin(theta/2)-1.j, math.cos(theta/2)+0.j]])
-    return np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                [0.+0.j, math.cos(theta/2)+0.j, 0.+0.j, math.sin(theta/2)-1.j],
-                [0.+0.j, 0.+0.j, 1+0.j, 0+0.j],
-                [0.+0.j, math.sin(theta/2)-1.j, 0+1.j, math.cos(theta/2)+0.j]])
+def get_crx_be(theta):
+    return np.array([[1, 0, 0, 0],
+    [0, 1, 0, 0],
+    [0, 0, math.cos(theta / 2), -1j * math.sin(theta / 2)],
+    [0, 0, -1j * math.sin(theta / 2), math.cos(theta / 2)]])
 
 def get_cu_be(theta, phi, lam, gamma): 
     return  np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
@@ -298,35 +280,18 @@ def get_cu_be(theta, phi, lam, gamma):
                 [0.+0.j, 0.+0.j, cmath.exp(1j * gamma) * math.cos(theta / 2), -cmath.exp(1j * (lam+ gamma)) * math.sin(theta / 2)],
                 [0.+0.j,  0.+0.j, cmath.exp(1j * (phi+ gamma)) * math.sin(theta / 2), cmath.exp(1j * (phi + lam+ gamma)) * math.cos(theta / 2)]])
 
-def get_cry(theta, num_gap_qubits = 0):
-    if num_gap_qubits == 1:
-        return np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, math.cos(theta/2)+0.j, 0.+0.j, -math.sin(theta/2), 0.+0.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, math.cos(theta/2)+0.j, 0.+0.j, -math.sin(theta/2)],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, math.sin(theta/2), 0.+0.j, math.cos(theta/2)+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, math.sin(theta/2), 0.+0.j, math.cos(theta/2)+0.j]])
-    return np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                [0.+0.j, math.cos(theta/2)+0.j, 0.+0.j, -math.sin(theta/2)+0.j],
-                [0.+0.j, 0.+0.j, 1+0.j, 0+0.j],
-                [0.+0.j, math.sin(theta/2)+0.j, 0+1.j, math.cos(theta/2)+0.j]])
+def get_cry_be(theta):
+    return np.array([[1, 0, 0, 0],
+    [0, 1, 0, 0],
+    [0, 0, math.cos(theta / 2), -math.sin(theta / 2)],
+    [0, 0, math.sin(theta / 2), math.cos(theta / 2)]])
 
-def get_crz(theta, num_gap_qubits = 0):
-    if num_gap_qubits == 1:
-         return np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, -cmath.exp(-1j * theta / 2), 0.+0.j, 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, -cmath.exp(-1j * theta / 2), 0.+0.j, 0.+0.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, cmath.exp(-1j * theta / 2), 0.+0.j],
-                        [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, cmath.exp(-1j * theta / 2)]])       
-    return np.array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                [0.+0.j, 1.+0.j, 0.+0.j, 0+0.j],
-                [0.+0.j, 0.+0.j, cmath.exp(-1j * theta / 2), 0+0.j],
-                [0.+0.j, 0+0.j, 0+0.j, cmath.exp(-1j * theta / 2)]])
+def get_crz(theta):     
+    return np.array([
+    [1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+    [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
+    [0.+0.j, 0.+0.j, cmath.exp(-1j * theta / 2), 0.+0.j],
+    [0.+0.j, 0.+0.j, 0.+0.j, cmath.exp(1j * theta / 2)]])
 
 def get_mcp_be(lam, num_qubits):
     if num_qubits == 2:
@@ -389,7 +354,7 @@ def get_matrix_for_multi_qubit_big_endian(gate: GateInformation):
             return get_crx_be(theta)
         case GateNames.CONTROLLED_ROTAIONAL_Y.value:
             theta = gate.get_params()[0]
-            return get_cry(theta)
+            return get_cry_be(theta)
         case GateNames.CONTROLLED_ROTAIONAL_Z.value:
             theta = gate.get_params()[0]
             return get_crz(theta)
@@ -410,27 +375,27 @@ def get_matrix_for_multi_qubit_big_endian(gate: GateInformation):
             return get_cu_be(theta, phi, lam, gamma)
         case GateNames.CONTROLLED_X.value:
             return CX_BE
-        case GateNames.CONTROLLED_Y.value:
-            return CY_BE
+        # case GateNames.CONTROLLED_Y.value:
+        #     return CY_BE
         case GateNames.CONTROLLED_Z.value:
             return gate.get_matrix()
-        case GateNames.DOUBLE_CONTROLLED_X.value:
-            return gate.get_matrix()
-        case GateNames.MULTI_CONTROLLED_PHASE.value:
-            lam = gate.get_params[0]
-            return get_mcp_be(lam, gate.get_num_qubits())
+        # case GateNames.DOUBLE_CONTROLLED_X.value:
+        #     return gate.get_matrix()
+        # case GateNames.MULTI_CONTROLLED_PHASE.value:
+        #     lam = gate.get_params[0]
+        #     return get_mcp_be(lam, gate.get_num_qubits())
         case GateNames.RELATIVE_PHASE_CONTROLLED_CONTROLLED_X.value:
             return RCCX_BE
-        case GateNames.RELATIVE_PHASE_CONTROLLED_X.value:
-            return RCX_BE
-        case GateNames.ROTATIONAL_X_X.value:
-            return gate.get_matrix()
-        case GateNames.ROTATIONAL_Y_Y.value:
-            return get_ryy_be(theta)
-        case GateNames.ROTATIONAL_Z_X.value:
-            theta = gate.get_params()[0]
-            return get_rzx_be(theta)
-        case GateNames.ROTATIONAL_Z_Z.value:
-            return gate.get_matrix()
+        # case GateNames.RELATIVE_PHASE_CONTROLLED_X.value:
+        #     return RCCCX_BE
+        # case GateNames.ROTATIONAL_X_X.value:
+        #     return gate.get_matrix()
+        # case GateNames.ROTATIONAL_Y_Y.value:
+        #     return get_ryy_be(theta)
+        # case GateNames.ROTATIONAL_Z_X.value:
+        #     theta = gate.get_params()[0]
+        #     return get_rzx_be(theta)
+        # case GateNames.ROTATIONAL_Z_Z.value:
+        #     return gate.get_matrix()
         case _:
-            return []
+            raise GateNotImplementedError
