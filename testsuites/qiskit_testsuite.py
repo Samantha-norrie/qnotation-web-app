@@ -50,7 +50,7 @@ class TestEmpty(TestQNotation):
 class TestTypo(TestQNotation):
     @classmethod
     def setup_class(cls):
-        cls.data = asyncio.run(send_request(TYPO))
+        cls.data = asyncio.run(send_request(TYPO_QISKIT))
 
     def test_status_code(self):
         assert self.data[STATUS] == BAD_REQUEST_ERR
@@ -92,7 +92,7 @@ class TestTypo(TestQNotation):
 class TestSingleQubitSingleHadamard(TestQNotation):
     @classmethod
     def setup_class(cls):
-        cls.data = asyncio.run(send_request(SINGLE_QUBIT_SINGLE_HADAMARD))
+        cls.data = asyncio.run(send_request(SINGLE_QUBIT_SINGLE_HADAMARD_QISKIT))
 
     def test_status_code(self):
         assert self.data["status"] == SUCCESS
@@ -134,7 +134,7 @@ class TestSingleQubitSingleHadamard(TestQNotation):
 class TestSingleColumnTwoQubitNeighbouringGate(TestQNotation):
     @classmethod
     def setup_class(cls):
-        cls.data = asyncio.run(send_request(SINGLE_COLUMN_TWO_QUBIT_NEIGHBOURING_GATE))
+        cls.data = asyncio.run(send_request(SINGLE_COLUMN_TWO_QUBIT_NEIGHBOURING_GATE_QISKIT))
 
     def test_status_code(self):
         assert self.data["status"] == SUCCESS
@@ -176,7 +176,7 @@ class TestBellStateThreeQubits(TestQNotation):
     @classmethod
     def setup_class(cls):
         cls.data = asyncio.run(
-            send_request(BELL_STATE_THREE_QUBITS)
+            send_request(BELL_STATE_THREE_QUBITS_QISKIT)
         )
 
     def test_status_code(self):
@@ -219,7 +219,7 @@ class TestHigherIndexedControlQubit(TestQNotation):
     @classmethod
     def setup_class(cls):
         cls.data = asyncio.run(
-            send_request(HIGHER_CONTROL_QUBIT_INDEX)
+            send_request(HIGHER_CONTROL_QUBIT_INDEX_QISKIT)
         )
 
     def test_status_code(self):
@@ -262,7 +262,7 @@ class TestNonNeighbouringQubits(TestQNotation):
     @classmethod
     def setup_class(cls):
         cls.data = asyncio.run(
-            send_request(NON_NEIGHBOURING_QUBITS)
+            send_request(NON_NEIGHBOURING_QUBITS_QISKIT)
         )
 
     def test_status_code(self):

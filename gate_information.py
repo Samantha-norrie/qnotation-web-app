@@ -7,7 +7,8 @@ class GateInformation:
     def __init__(
         self,
         name: str,
-        matrix: np.ndarray,
+        matrix_be: np.ndarray,
+        matrix_le: np.ndarray,
         num_qubits: int,
         control_qubit_indices: list[int],
         target_qubit_indices: list[int] = [],
@@ -15,7 +16,8 @@ class GateInformation:
     ) -> None:
 
         self._name = name
-        self._matrix = matrix
+        self._matrix_be = matrix_be
+        self._matrix_le = matrix_le
         self._num_qubits = num_qubits
         self._control_qubit_indices = control_qubit_indices
         self._target_qubit_indices = target_qubit_indices
@@ -30,8 +32,11 @@ class GateInformation:
     def get_name(self) -> str:
         return self._name
 
-    def get_matrix(self) -> np.ndarray:
-        return self._matrix
+    def get_matrix_be(self) -> np.ndarray:
+        return self._matrix_be
+    
+    def get_matrix_le(self) -> np.ndarray:
+        return self._matrix_le
 
     def get_num_qubits(self) -> int:
         return self._num_qubits

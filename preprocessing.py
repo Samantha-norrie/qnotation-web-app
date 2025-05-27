@@ -8,7 +8,7 @@ import copy
 import sys
 import os
 import tempfile
-from GateInformation import GateInformation
+from gate_information import GateInformation
 from utils import *
 from errors import *
 

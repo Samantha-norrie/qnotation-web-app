@@ -6,15 +6,20 @@ from abc import ABC, abstractmethod
 from utils import MESSAGE_HIGHER_INDEXED_CONTROL_QUBIT_ERROR, MESSAGE_UNKNOWN_ERROR
 
 EMPTY = ""
-NO_GATES = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(2)\n\n# Insert code below\n"
-TYPO = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(2)\n\n# Insert code below\nqv.h(0)"
-SINGLE_QUBIT_SINGLE_HADAMARD = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(1)\n\n# Insert code below\nqc.h(0)"
-TOO_MANY_QUBITS = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(100)\n\n# Insert code below\nqc.h(0)"
-SINGLE_COLUMN_TWO_QUBIT_NEIGHBOURING_GATE = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(2)\n\n# Insert code below\nqc.cx(0, 1)\n"
-SINGLE_COLUMN_TWO_QUBIT_NEIGHBOURING_GATE_REVERSE = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(2)\n\n# Insert code below\nqc.cx(1, 0)\n"
-BELL_STATE_THREE_QUBITS = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(3)\n\n# Insert code below\nqc.h(0)\nqc.cx(0, 1)\n"
-HIGHER_CONTROL_QUBIT_INDEX = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(3)\n\n# Insert code below\nqc.h(0)\nqc.cx(1, 0)\n"
-NON_NEIGHBOURING_QUBITS = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(3)\n\n# Insert code below\nqc.h(0)\nqc.cx(0, 2)\n"
+
+# QISKIT INPUTS
+NO_GATES_QISKIT = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(2)\n\n# Insert code below\n"
+TYPO_QISKIT = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(2)\n\n# Insert code below\nqv.h(0)"
+SINGLE_QUBIT_SINGLE_HADAMARD_QISKIT = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(1)\n\n# Insert code below\nqc.h(0)"
+TOO_MANY_QUBITS_QISKIT = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(100)\n\n# Insert code below\nqc.h(0)"
+SINGLE_COLUMN_TWO_QUBIT_NEIGHBOURING_GATE_QISKIT = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(2)\n\n# Insert code below\nqc.cx(0, 1)\n"
+SINGLE_COLUMN_TWO_QUBIT_NEIGHBOURING_GATE_REVERSE_QISKIT = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(2)\n\n# Insert code below\nqc.cx(1, 0)\n"
+BELL_STATE_THREE_QUBITS_QISKIT = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(3)\n\n# Insert code below\nqc.h(0)\nqc.cx(0, 1)\n"
+HIGHER_CONTROL_QUBIT_INDEX_QISKIT = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(3)\n\n# Insert code below\nqc.h(0)\nqc.cx(1, 0)\n"
+NON_NEIGHBOURING_QUBITS_QISKIT = "from qiskit import QuantumCircuit\nimport numpy as np\nqc = QuantumCircuit(3)\n\n# Insert code below\nqc.h(0)\nqc.cx(0, 2)\n"
+
+# PENNYLANE INPUTS
+BELL_STATE_PENNYLANE = "import pennylane as qml\nimport numpy as np\ndev = qml.device(\"default.qubit\", wires=2)\n@qml.qnode(dev)\ndef bell_state_circuit():\n\tqml.Hadamard(wires=0)\n\tqml.CNOT(wires=[0, 1])\n\treturn qml.state()\nqc()"
 
 URL = "http://127.0.0.1:8000/get_notation_data"
 HEADERS = {"Content-Type": "application/json"}

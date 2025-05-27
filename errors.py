@@ -1,7 +1,6 @@
 class InputError(Exception):
     pass
 
-
 class InvalidGateError(Exception):
     pass
 

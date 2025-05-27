@@ -6,7 +6,7 @@ import math
 import cmath
 import copy
 from errors import GateNotImplementedError
-from GateInformation import GateInformation
+from gate_information import GateInformation
 
 CIRCUIT_GATE_LOOP = '''    gate_list = []\n
     for gate in qc.data:\n\
@@ -88,8 +88,7 @@ class GateNames(Enum):
     Y = "y"
     Z = "z"
 
-CONTROL_TARGET_GATE_NAMES = [ "ch", "cp", "crx", "cry", "crz","cs","csdg", "csx","cswap","cx", "cy", "cz", 
-                            "csx", "cu", "mcp", "mcx"]
+CONTROL_TARGET_GATE_NAMES = [ "ch", "cp", "crx", "cry", "crz","cs","csdg", "csx","cswap","cx", "cy", "cz", "cu", "mcp", "mcx"]
 CONTROL_CONTROL_TARGET_GATE_NAMES = ["ccx", "ccz","rccx"]
 CONTROL_CONTROL_CONTROL_TARGET_GATE_NAMES = ["rcccx"]
 
@@ -118,7 +117,7 @@ def get_gate_object_from_gate_name(gate_name, params=[]):
             return CSdgGate()
         case GateNames.CONTROLLED_S.value:
             return CSGate()
-        case GateNames.CONTROLLED_SQUARED_X:
+        case GateNames.CONTROLLED_SQUARED_X.value:
             return CSXGate()
         case GateNames.CONTROLLED_U.value:
             return CUGate(params[0], params[1], params[2], params[3])
@@ -339,6 +338,7 @@ def get_rzx_be(theta):
         
 def get_matrix_for_multi_qubit_big_endian(gate: GateInformation):
     name = gate.get_name()
+
     match name:
         case GateNames.CONTROLLED_CONTROLLED_X.value:
             return CCX_BE        
@@ -362,8 +362,8 @@ def get_matrix_for_multi_qubit_big_endian(gate: GateInformation):
             return gate.get_matrix()
         case GateNames.CONTROLLED_S.value:
             return gate.get_matrix()
-        case GateNames.CONTROLLED_SQUARED_X.value:
-            return CSX_BE
+        # case GateNames.CONTROLLED_SQUARED_X.value:
+        #     return CSX_BE
         case GateNames.CONTROLLED_SWAP.value:
             return CSWAP_BE
         case GateNames.CONTROLLED_U.value:
