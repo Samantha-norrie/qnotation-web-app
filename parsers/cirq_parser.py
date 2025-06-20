@@ -1,9 +1,9 @@
 import matrices.matrix_info_registry
 from . import Parser, HigherIndexedControlQubitError, GateInformation
-from .parser_utils import  get_control_and_target_qubit_indices, PENNYLANE_CIRCUIT_GATE_LOOP, MAX_NUM_QUBITS_FOR_TENSOR, MAX_NUM_QUBITS_FOR_APP
+from .parser_utils import  get_control_and_target_qubit_indices, insert_main_function_into_code_string, CIRQ_CIRCUIT_GATE_LOOP, MAX_NUM_QUBITS_FOR_TENSOR, MAX_NUM_QUBITS_FOR_APP, NUMPY_IMPORT_STRING
 from matrices.multi_qubit_matrix_information import MultiQubitMatrixInformation
 
-class PennylaneParser(Parser):
+class CirqParser(Parser):
     def run_pipeline(self, data):
         num_qubits, gate_attributes = self.convert_code_string_to_circuit_object(data)
         gate_information_list = self.create_gate_information_list_for_gates(gate_attributes)
@@ -61,45 +61,50 @@ class PennylaneParser(Parser):
         )
 
     def convert_code_string_to_circuit_object(self, code_string):
-        code_string = code_string + PENNYLANE_CIRCUIT_GATE_LOOP
-        print(code_string)
+        code_string = insert_main_function_into_code_string(NUMPY_IMPORT_STRING, code_string, CIRQ_CIRCUIT_GATE_LOOP)
         return super().convert_code_string_to_circuit_object(code_string)
 
     def create_gate_information_list_for_gates(self, gate_attributes):
+        print("here")
         gate_information_list = []
-
-        for gate in gate_attributes:
-            name = gate["name"].lower()
-            qubit_indices = gate["wires"]
+        for  gate in gate_attributes:
+            name = gate["name"]
+            qubit_indices = gate["qubit_indices"]
             params = gate["params"]
-            matrix_be = gate["matrix"]
-            print(name)
-            control_qubit_indices, target_qubit_indices = (
-                get_control_and_target_qubit_indices(name, qubit_indices)
-            )
 
-            for control_qubit_index in control_qubit_indices:
-                if any(target_qubit_index < control_qubit_index for target_qubit_index in target_qubit_indices):
-                    raise HigherIndexedControlQubitError()
 
-            num_qubits = len(qubit_indices)
-            matrix_le = []
-            if num_qubits == 1:
-                matrix_le = matrix_be
-            else:
-                matrix_le = (MultiQubitMatrixInformation.get_gate_class(name)).get_little_endian()
+        # for gate in gate_attributes:
+        #     name = gate["name"].lower()
+        #     qubit_indices = gate["wires"]
+        #     params = gate["params"]
+        #     matrix_be = gate["matrix"]
+        #     print(name)
+        #     control_qubit_indices, target_qubit_indices = (
+        #         get_control_and_target_qubit_indices(name, qubit_indices)
+        #     )
 
-            new_gate_information = GateInformation(
-                    name,
-                    matrix_be,
-                    matrix_le,
-                    len(qubit_indices),
-                    control_qubit_indices,
-                    target_qubit_indices,
-                    params,
-                )
+        #     for control_qubit_index in control_qubit_indices:
+        #         if any(target_qubit_index < control_qubit_index for target_qubit_index in target_qubit_indices):
+        #             raise HigherIndexedControlQubitError()
 
-            gate_information_list.append(new_gate_information)
+        #     num_qubits = len(qubit_indices)
+        #     matrix_le = []
+        #     if num_qubits == 1:
+        #         matrix_le = matrix_be
+        #     else:
+        #         matrix_le = (MultiQubitMatrixInformation.get_gate_class(name)).get_little_endian()
+
+        #     new_gate_information = GateInformation(
+        #             name,
+        #             matrix_be,
+        #             matrix_le,
+        #             len(qubit_indices),
+        #             control_qubit_indices,
+        #             target_qubit_indices,
+        #             params,
+        #         )
+
+        #     gate_information_list.append(new_gate_information)
 
         return gate_information_list
         
