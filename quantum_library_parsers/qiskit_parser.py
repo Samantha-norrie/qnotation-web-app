@@ -7,6 +7,7 @@ from operation_info.gate_information import GateInformation
 from errors.errors import HigherIndexedControlQubitError, NonNeighbouringQubitsError, TooManyQubitsError
 from .parser_utils import  get_control_and_target_qubit_indices, insert_main_function_into_code_string, get_qiskit_gate_object_from_gate_name, QISKIT_CIRCUIT_GATE_LOOP, NUMPY_IMPORT_STRING, MAX_NUM_QUBITS_FOR_TENSOR, MAX_NUM_QUBITS_FOR_APP
 from operation_info.multi_qubit_matrix_information import MultiQubitMatrixInformation
+from operation_info.operation_info_utils import get_gate_acronym
 
 class QiskitParser(Parser):
 
@@ -20,6 +21,7 @@ class QiskitParser(Parser):
         Returns:
             dict[object]: data needed for visualizations
         """
+
         num_qubits, gate_attributes = self.convert_code_string_to_circuit_object(qc_string)
 
         if num_qubits > MAX_NUM_QUBITS_FOR_APP:
@@ -114,9 +116,10 @@ class QiskitParser(Parser):
         """
         gate_information_list = []
         for gate in gate_attributes:
-            name = gate["name"]
+            name = get_gate_acronym(gate["name"])
             qubit_indices = gate["qubit_indices"]
             params = gate["params"]
+
             control_qubit_indices, target_qubit_indices = (
                 get_control_and_target_qubit_indices(name, qubit_indices)
             )
@@ -125,7 +128,7 @@ class QiskitParser(Parser):
                 for target_qubit_index in target_qubit_indices:
                     if control_qubit_index > target_qubit_index:
                         raise HigherIndexedControlQubitError()
-                
+
             sorted_control_target_list = control_qubit_indices + target_qubit_indices
             for i in range(0, len(sorted_control_target_list)-1):
                 if sorted_control_target_list[i+1] - sorted_control_target_list[i] > 1:

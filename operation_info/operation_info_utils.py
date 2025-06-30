@@ -34,5 +34,5 @@ name_to_acronym = {
     for name in names
 }
 
-def get_acronym(name: str) -> str | None:
+def get_gate_acronym(name: str) -> str | None:
     return name_to_acronym.get(name.lower())

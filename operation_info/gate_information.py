@@ -1,5 +1,4 @@
 import numpy as np
-from .operation_info_utils import get_acronym
 
 class GateInformation:
 
@@ -14,7 +13,7 @@ class GateInformation:
         params=[],
     ) -> None:
 
-        self._name = get_acronym(name)
+        self._name = name
         self._matrix_be = matrix_be
         self._matrix_le = matrix_le
         self._num_qubits = num_qubits

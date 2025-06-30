@@ -258,8 +258,7 @@ class Parser(ABC):
 
                     matrices.append(
                         simplify_single_matrix(
-                            current_qubit_in_column.get_matrix_le().tolist() if little_endian else current_qubit_in_column.get_matrix_be().tolist()
-                        ).copy()
+                            (current_qubit_in_column.get_matrix_le().tolist() if little_endian else current_qubit_in_column.get_matrix_be().tolist()).copy())
                     )
 
                 # append identity matrix if qubit is not being used by any other gate

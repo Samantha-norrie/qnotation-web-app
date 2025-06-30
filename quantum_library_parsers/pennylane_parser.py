@@ -3,6 +3,7 @@ from .parser_utils import  get_control_and_target_qubit_indices, PENNYLANE_CIRCU
 from operation_info.multi_qubit_matrix_information import MultiQubitMatrixInformation
 from errors.errors import HigherIndexedControlQubitError, NonNeighbouringQubitsError, TooManyQubitsError
 from operation_info.gate_information import GateInformation
+from operation_info.operation_info_utils import get_gate_acronym
 
 class PennylaneParser(Parser):
     
@@ -111,7 +112,7 @@ class PennylaneParser(Parser):
         gate_information_list = []
 
         for gate in gate_attributes:
-            name = gate["name"].lower()
+            name = get_gate_acronym(gate["name"].lower())
             qubit_indices = gate["wires"]
             params = gate["params"]
             matrix_be = gate["matrix"]

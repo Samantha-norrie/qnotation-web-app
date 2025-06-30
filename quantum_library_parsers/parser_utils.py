@@ -53,7 +53,7 @@ class GateNames(Enum):
     UNIFORMLY_CONTROLLED = "UC"
     UNITARY = "UNITARY"
     X = "X"
-    X_X_MINUS_Y_Y = "XX_YY"
+    X_X_MINUS_Y_Y = "XX-YY"
     X_X_PLUS_Y_Y = "XX+YY"
     Y = "Z"
     Z = "Z"
@@ -171,10 +171,7 @@ def get_control_and_target_qubit_indices(gate_name: str, indices: list) -> list:
         target_qubit_indices.append(indices[2])
 
     else:
-        control_qubit_indices.append(indices[0])
-        control_qubit_indices.append(indices[1])
-        control_qubit_indices.append(indices[2])
-        target_qubit_indices.append(indices[3])
+        raise GateNotImplementedError()
 
     control_qubit_indices.sort()
     target_qubit_indices.sort()
@@ -200,7 +197,7 @@ def convert_line_qubits_to_ints(qubit_indices: list) -> list:
 
 def get_qiskit_gate_object_from_gate_name(gate_name: str, params: list =[]) -> Gate:
 
-    gate_name = gate_name.lower()
+    gate_name = gate_name.upper()
 
     match gate_name:
         case GateNames.CONTROLLED_CONTROLLED_X.value:

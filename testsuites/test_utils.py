@@ -25,7 +25,6 @@ PENNYLANE_BELL_STATE_THREE_QUBITS = "import pennylane as qml\nimport numpy as np
 
 # CIRQ INPUTS
 CIRQ_SINGLE_QUBIT_SINGLE_HADAMARD = "import cirq\nimport numpy as np\nqubit0 = cirq.LineQubit(0)\ncircuit = cirq.Circuit()\ncircuit.append([cirq.H(qubit0)])"
-CIRQ_BELL_STATE_THREE_QUBITS = "import cirq\nimport numpy as np\nqubit0 = cirq.LineQubit(0)\nqubit1 = cirq.LineQubit(1)\nqubit2 = cirq.LineQubit(2)\ncircuit = cirq.Circuit()\ncircuit.append([cirq.H(qubit0), cirq.CNOT(qubit0, qubit1)])"
 
 URL = "http://127.0.0.1:8000/notation_data"
 HEADERS = {"Content-Type": "application/json"}
@@ -125,7 +124,7 @@ RESULTS_SINGLE_QUBIT_SINGLE_HADAMARD = {
     "num_qubits": 1,
     "status": SUCCESS,
 }
-QISKIT_RESULTS_SINGLE_COLUMN_TWO_QUBIT_NEIGHBOURING_GATE = {
+RESULTS_SINGLE_COLUMN_TWO_QUBIT_NEIGHBOURING_GATE = {
     "circuit_dirac_gate_big_endian": [{'content': [[0], [0]], 'type': 'STATE', 'key': 0}, {'content': [{'gate': 'CX', 'gate_type': 'GATE INFO'}, {'gate': '', 'gate_type': 'TARGET'}], 'type': 'GATE', 'key': 1}],
     "circuit_dirac_gate_little_endian": [{'content': [[0], [0]], 'type': 'STATE', 'key': 0}, {'content': [{'gate': '', 'gate_type': 'TARGET'}, {'gate': 'CX', 'gate_type': 'GATE INFO'}], 'type': 'GATE', 'key': 1}],
     "dirac_state_big_endian": [{'content': [{'bin': '00', 'scalar': 1}], 'type': 'STATE', 'key': 0}, {'content': [{'bin': '00', 'scalar': 1.0}], 'type': 'STATE', 'key': 1}],

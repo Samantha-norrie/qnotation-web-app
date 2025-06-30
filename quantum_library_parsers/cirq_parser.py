@@ -3,6 +3,7 @@ from errors.errors import HigherIndexedControlQubitError, NonNeighbouringQubitsE
 from .parser_utils import  get_control_and_target_qubit_indices, insert_main_function_into_code_string, convert_line_qubits_to_ints, CIRQ_CIRCUIT_GATE_LOOP, MAX_NUM_QUBITS_FOR_TENSOR, MAX_NUM_QUBITS_FOR_APP, NUMPY_IMPORT_STRING
 from operation_info.multi_qubit_matrix_information import MultiQubitMatrixInformation
 from operation_info.gate_information import GateInformation
+from operation_info.operation_info_utils import get_gate_acronym
 
 class CirqParser(Parser):
 
@@ -110,8 +111,7 @@ class CirqParser(Parser):
         """
         gate_information_list = []
         for  gate in gate_attributes:
-            name = gate["name"]
-            qubit_indices = gate["qubit_indices"]
+            name = get_gate_acronym(gate["name"])
             qubit_indices = convert_line_qubits_to_ints(gate["qubit_indices"])
             params = gate["params"]
             matrix_be = gate["matrix"]
