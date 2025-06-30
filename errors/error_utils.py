@@ -1,0 +1,8 @@
+MESSAGE_INPUT_ERROR = "Invalid input given."
+MESSAGE_TOO_MANY_QUBITS_ERROR = "Too many qubits used. Please use 5 qubits or less."
+MESSAGE_TOO_MANY_QUBITS_FOR_TENSOR_ERROR = "Too many qubits used for tensor setting. Please use 3 qubits or less."
+MESSAGE_INVALID_GATE_ERROR = "Invalid gate(s) used."
+MESSAGE_GATE_NOT_SUPPORTED_ERROR = "Gate(s) not supported."
+MESSAGE_HIGHER_INDEXED_CONTROL_QUBIT_ERROR = "One or more control qubits have an index higher than their respective target qubit(s)"
+MESSAGE_NON_NEIGHBOURING_QUBITS_ERROR = "Multi-qubit gate(s) contain non-neighbouring qubits"
+MESSAGE_UNKNOWN_ERROR = "UNKNOWN ERROR"

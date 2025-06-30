@@ -1,13 +1,12 @@
-from qiskit import *
 import numpy as np
 
 class GateInformation:
-    """A class for relating a CircuitInstruction to the indices of the qubits it is applied to. Done for Qiskit 1.3 port"""
 
     def __init__(
         self,
         name: str,
-        matrix: np.ndarray,
+        matrix_be: np.ndarray,
+        matrix_le: np.ndarray,
         num_qubits: int,
         control_qubit_indices: list[int],
         target_qubit_indices: list[int] = [],
@@ -15,14 +14,15 @@ class GateInformation:
     ) -> None:
 
         self._name = name
-        self._matrix = matrix
+        self._matrix_be = matrix_be
+        self._matrix_le = matrix_le
         self._num_qubits = num_qubits
         self._control_qubit_indices = control_qubit_indices
         self._target_qubit_indices = target_qubit_indices
         self._params = params
 
     def __str__(self): 
-        return f"GateInformation(name='{self._name}', matrix={self._matrix}, num_qubits={self._num_qubits}, control_qubit_indices={self._control_qubit_indices}, target_qubit_indices={self._target_qubit_indices}, params={self._params} )"
+        return f"GateInformation(name='{self._name}', matrix_be={self._matrix_be}, matrix_le={self._matrix_le}, num_qubits={self._num_qubits}, control_qubit_indices={self._control_qubit_indices}, target_qubit_indices={self._target_qubit_indices}, params={self._params} )"
     
     def __repr__(self):
         return self.__str__()
@@ -30,8 +30,11 @@ class GateInformation:
     def get_name(self) -> str:
         return self._name
 
-    def get_matrix(self) -> np.ndarray:
-        return self._matrix
+    def get_matrix_be(self) -> np.ndarray:
+        return self._matrix_be
+    
+    def get_matrix_le(self) -> np.ndarray:
+        return self._matrix_le
 
     def get_num_qubits(self) -> int:
         return self._num_qubits
